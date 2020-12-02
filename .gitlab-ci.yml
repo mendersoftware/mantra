@@ -23,6 +23,28 @@ test:check-python3-formatting:
   script:
     - TOXENV=flake8 tox
 
+test:acceptance-tests:
+  stage: test
+  needs: []
+  tags:
+    - docker
+  image: tiangolo/docker-with-compose
+  services:
+    - docker:19.03.5-dind
+  before_script:
+    - apk add py3-tox bash
+    - docker --version
+    - docker-compose --version
+    # TODO: rework to not build here and test pre-built images
+    - make docker-build
+    - make docker-deploy
+    - sleep 5
+    - make docker-port || true
+    - docker-compose -f docker-compose.yml logs
+  script:
+    - cp etc/tetra/tetra-test.conf.sample tetra-test.conf
+    - TOXENV=functional tox
+
 build:docker:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api

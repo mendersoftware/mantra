@@ -1,5 +1,4 @@
 [![Build Status](https://gitlab.com/Northern.tech/Mender/mantra/badges/master/pipeline.svg)](https://gitlab.com/Northern.tech/Mender/mantra/pipelines)
-[![Build Status](https://travis-ci.org/mendersoftware/mantra.svg?branch=master)](https://travis-ci.org/mendersoftware/mantra)
 
 # mantra
 
