@@ -1,57 +1,185 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 
-import ResourceTableEntry from './resource-table-entry';
+import { Typography } from '@mui/material';
 
-const tableTypes = {
-  projects: {
-    titles: ['Id', 'Name'],
-    keys: ['id', 'name'],
-    links: {
-      name: (project) => `/projects/${project.id}/builds`,
-      id: (project) => `/projects/${project.id}/builds`
+import Link from '../components/link';
+
+const ResultCell = ({ result }) => {
+  const color = result === 'success' || result == 'passed' ? 'success.light' : 'error';
+
+  return (
+    <Typography variant="h8" color={color}>
+      {' '}
+      {result}{' '}
+    </Typography>
+  );
+};
+
+const tableColumnDefinitions = {
+  projects: [
+    {
+      field: 'id',
+      headerName: 'GitLab Pipeline ID',
+      minWidth: 100
+    },
+    {
+      field: 'name',
+      headerName: 'Name',
+      minWidth: 250,
+      renderCell: params => <Link href={`/projects/${params.row.id}/builds`}> {params.row.name} </Link>
     }
-  },
-  builds: {
-    titles: ['Id', 'Project Id', 'Name', 'Build Url', 'Region', 'Environment', 'Show Failed'],
-    keys: ['id', 'project_id', 'name', 'build_url', 'region', 'environment', 'show_failed'],
-    links: {
-      name: (build) => `/projects/${build.project_id}/builds/${build.id}`,
-      id: (build) => `/projects/${build.project_id}/builds/${build.id}`,
-      show_failed: (build) => `/projects/${build.project_id}/builds/last_failed/?name=${encodeURIComponent(build.name)}&count=10`
+  ],
+  builds: [
+    {
+      field: 'id',
+      headerName: 'Job ID',
+      renderCell: params => {
+        const projectid = params.row.project_id;
+        return <Link href={`https://gitlab.com/Northern.tech/Mender/mender-qa/-/projects/${projectid}/jobs/${params.row.id}`}> {params.row.id} </Link>;
+      }
+    },
+    {
+      field: 'project_id',
+      headerName: 'Project ID'
+    },
+    {
+      field: 'name',
+      headerName: 'Name',
+      renderCell: params => {
+        const projectid = params.row.project_id;
+        return <Link href={`/projects/${projectid}/builds/${params.row.id}`}> {params.row.name} </Link>;
+      },
+      minWidth: 200
+    },
+    {
+      field: 'status',
+      headerName: 'Result',
+      renderCell: params => {
+        return <ResultCell result={params.row.status} />;
+      }
     }
-  },
-  results: {
-    titles: ['Id', 'Build Id', 'Project Id', 'Result', 'Result Message', 'Test Name', 'Timestamp'],
-    keys: ['id', 'build_id', 'project_id', 'result', 'result_message', 'test_name', 'timestamp'],
-    links: {
-      project_id: (r) => `/projects/${r.project_id}/builds`,
-      test_name: (r) => `/projects/${r.project_id}/tests/history?name=${encodeURIComponent(r.test_name)}&count=10`
+  ],
+  results: [
+    {
+      field: 'id',
+      headerName: 'ID',
+      minWidth: 150,
+      sortable: false,
+      editable: false
+    },
+    {
+      field: 'build_id',
+      headerName: 'Build ID',
+      minWidth: 150,
+      sortable: false,
+      filterable: false,
+      renderCell: params => <Link href={`/projects/${params.row.id}/builds/${params.row.jobId}/result`}> {params.row.jobId} </Link>,
+      editable: false
+    },
+    {
+      field: 'result',
+      headerName: 'Result',
+      minWidth: 110,
+      renderCell: params => {
+        return <ResultCell result={params.row.result} />;
+      },
+      sortable: true
+    },
+    {
+      field: 'result_message',
+      headerName: 'Result Message',
+      sortable: false,
+      minWidth: 110,
+      flex: 1,
+      renderCell: params => (
+        <Link href={{ pathname: `/projects/${params.row.id}/builds/result`, query: { codeString: params.row.test_name } }}> {params.row.result_message} </Link>
+      )
+    },
+    {
+      field: 'test_name',
+      headerName: 'Test Name',
+      description: 'This column has a value getter and is not sortable.',
+      sortable: true,
+      minMinWidth: 260,
+      flex: 1,
+      renderCell: params => (
+        <Link href={`/projects/${params.row.project_id}/tests/history?name=${encodeURIComponent(params.row.test_name)}&count=10`}>
+          {' '}
+          {params.row.test_name}{' '}
+        </Link>
+      )
+    },
+    {
+      field: 'tags',
+      headerName: 'Tags',
+      sortable: true,
+      renderCell: params => {
+        if (params.row.tags && params.row.tags.nightly) {
+          return (
+            <div
+              style={{
+                color: 'orange'
+              }}
+            >
+              {' '}
+              nightly{' '}
+            </div>
+          );
+        }
+        return '';
+      },
+      minWidth: 100
+    },
+    {
+      field: 'timestamp',
+      headerName: 'TimeStamp',
+      sortable: true,
+      valueGetter: params => {
+        const date = new Date(params.row.timestamp * 1000);
+        return date.toLocaleDateString();
+      },
+      minWidth: 200
     }
-  }
+  ]
 };
 
 const ResourceTable = ({ resources, type }) => {
-  const { titles: columnTitles, keys: columnKeys, links: columnLinks } = tableTypes[type];
+  const rows = resources;
+  const columns = tableColumnDefinitions[type];
+
+  let initialState = {};
+  if (type == 'results') {
+    initialState = {
+      sorting: {
+        sortModel: [
+          {
+            field: 'result',
+            sort: 'asc'
+          }
+        ]
+      }
+    };
+  }
+
   return (
-    <TableContainer>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell></TableCell>
-            {columnTitles.map((title, index) => (
-              <TableCell key={index}>{title}</TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {resources.map((resource, i) => (
-            <ResourceTableEntry key={i} resource={resource} columnKeys={columnKeys} columnLinks={columnLinks} />
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <DataGrid
+      autoHeight
+      showQuickFilter
+      initialState={initialState}
+      rows={rows}
+      columns={columns}
+      pageSize={10}
+      rowsPerPageOptions={[10]}
+      disableSelectionOnClick
+      disableColumnSelector
+      disableDensitySelector
+      loading={resources.length == 0}
+      components={{
+        Toolbar: GridToolbar
+      }}
+    />
   );
 };
 
