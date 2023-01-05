@@ -9,7 +9,14 @@ import { DataGrid } from '@mui/x-data-grid';
 import dayjs from 'dayjs';
 
 const columns = [
-  { field: 'test_name', headerName: 'Test Name', flex: 1 },
+  {
+    field: 'test_name',
+    headerName: 'Test Name',
+    flex: 1,
+    renderCell: params => (
+      <Link href={`/projects/${params.row.project_id}/tests/history?name=${encodeURIComponent(params.row.test_name)}&count=10`}> {params.row.test_name} </Link>
+    )
+  },
   { field: 'count', headerName: '# Failures', flex: 1 }
 ];
 
