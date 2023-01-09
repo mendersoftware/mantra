@@ -27,41 +27,39 @@ const Nightlies = ({ nightlies }) => {
     <>
       <Typography variant="h4">Nightlies</Typography>
       <Stack className={classes.builds}>
-        {Object.values(nightlies)
-          .reverse()
-          .map(monthlyNightlies => {
-            const date = new Date(monthlyNightlies[0].startedAt);
-            return (
-              <React.Fragment key={date.getMonth()}>
-                <Typography variant="h6">{date.toLocaleString('default', { month: 'long' })}</Typography>
-                <Grid container direction="row" justifyContent="flex-start" alignItems="flex-start">
-                  {monthlyNightlies.reverse().map(item => (
-                    <Stack key={item.path} alignItems="center">
-                      <Tooltip
-                        arrow
-                        title={
-                          <>
-                            {new Date(item.startedAt).toLocaleString()}
-                            {Object.entries(item.testReportSummary.total).map(([name, value]) => (
-                              <Stack direction="row" justifyContent="space-between" key={name}>
-                                <b>{name}</b>
-                                <div>{Math.ceil(value)}</div>
-                              </Stack>
-                            ))}
-                          </>
-                        }
-                      >
-                        <IconButton color={buildStatusColor(item.status)} edge="start" onClick={() => openNightlyClick(item)} size="small">
-                          <Circle color={buildStatusColor(item.status)} />
-                        </IconButton>
-                      </Tooltip>
-                      {!!Number(item.testReportSummary.total.failed) && <Typography variant="caption">{item.testReportSummary.total.failed}</Typography>}
-                    </Stack>
-                  ))}
-                </Grid>
-              </React.Fragment>
-            );
-          })}
+        {Object.values(nightlies).map(monthlyNightlies => {
+          const date = new Date(monthlyNightlies[0].startedAt);
+          return (
+            <React.Fragment key={date.getMonth()}>
+              <Typography variant="h6">{date.toLocaleString('default', { month: 'long' })}</Typography>
+              <Grid container direction="row" justifyContent="flex-start" alignItems="flex-start">
+                {monthlyNightlies.reverse().map(item => (
+                  <Stack key={item.path} alignItems="center">
+                    <Tooltip
+                      arrow
+                      title={
+                        <>
+                          {new Date(item.startedAt).toLocaleString()}
+                          {Object.entries(item.testReportSummary.total).map(([name, value]) => (
+                            <Stack direction="row" justifyContent="space-between" key={name}>
+                              <b>{name}</b>
+                              <div>{Math.ceil(value)}</div>
+                            </Stack>
+                          ))}
+                        </>
+                      }
+                    >
+                      <IconButton color={buildStatusColor(item.status)} edge="start" onClick={() => openNightlyClick(item)} size="small">
+                        <Circle color={buildStatusColor(item.status)} />
+                      </IconButton>
+                    </Tooltip>
+                    {!!Number(item.testReportSummary.total.failed) && <Typography variant="caption">{item.testReportSummary.total.failed}</Typography>}
+                  </Stack>
+                ))}
+              </Grid>
+            </React.Fragment>
+          );
+        })}
       </Stack>
     </>
   );
@@ -110,14 +108,19 @@ export async function getStaticProps() {
   const today = new Date();
   today.setDate(today.getDate() - 99);
   const latestNightlies = await getLatestNightlies(today, 100);
-  const nightlies = latestNightlies.reduce((accu, item) => {
-    const date = new Date(item.startedAt);
-    if (!accu[date.getMonth()]) {
-      accu[date.getMonth()] = [];
-    }
-    accu[date.getMonth()].push(item);
-    return accu;
-  }, {});
+  const { items: nightlies } = latestNightlies.reduce(
+    (accu, item) => {
+      const date = new Date(item.startedAt);
+      const key = `${date.getUTCFullYear()}-${date.getMonth()}`;
+      if (!accu.dates[key]) {
+        accu.dates[key] = true;
+        accu.items[Object.keys(accu.dates).length] = [];
+      }
+      accu.items[Object.keys(accu.dates).length].push(item);
+      return accu;
+    },
+    { dates: {}, items: {} }
+  );
   return {
     props: {
       nightlies
