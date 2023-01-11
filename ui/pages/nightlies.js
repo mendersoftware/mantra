@@ -69,7 +69,7 @@ export const getLatestNightlies = async (cutoffDate, limit = 1) => {
   const query = gql`
     query getPipeline($date: Time, $limit: Int) {
       project(fullPath: "Northern.tech/Mender/mender-qa") {
-        pipelines(source: "schedule", ref: "master", last: $limit, updatedAfter: $date) {
+        pipelines(source: "schedule", ref: "master", first: $limit, updatedAfter: $date) {
           nodes {
             path
             status
