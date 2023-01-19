@@ -32,7 +32,7 @@ def iterate_dates(start_date, total_days, delta_days=-1):
 
 def iterate_nightlies(start_date, total_days):
     # Filter with user that triggers master and nightlies:
-    parameters_base = "username=lluiscampos"
+    parameters_base = "username=mender-test-bot"
 
     for single_date in iterate_dates(start_date, total_days):
         single_date_str = single_date.strftime("%Y-%m-%d")
