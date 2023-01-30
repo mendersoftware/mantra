@@ -16,6 +16,7 @@ const areas = {
 };
 
 const repos = [
+  { repo: 'app-update-module', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'auditlogs', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
   { repo: 'create-artifact-worker', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
   { repo: 'deployments-enterprise', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
