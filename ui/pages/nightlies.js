@@ -27,13 +27,13 @@ const Nightlies = ({ nightlies }) => {
     <>
       <Typography variant="h4">Nightlies</Typography>
       <Stack className={classes.builds}>
-        {Object.values(nightlies).map(monthlyNightlies => {
+        {nightlies.map(monthlyNightlies => {
           const date = new Date(monthlyNightlies[0].startedAt);
           return (
             <React.Fragment key={date.getMonth()}>
               <Typography variant="h6">{date.toLocaleString('default', { month: 'long' })}</Typography>
               <Grid container direction="row" justifyContent="flex-start" alignItems="flex-start">
-                {monthlyNightlies.reverse().map(item => (
+                {monthlyNightlies.map(item => (
                   <Stack key={item.path} alignItems="center">
                     <Tooltip
                       arrow
@@ -108,7 +108,7 @@ export async function getStaticProps() {
   const today = new Date();
   today.setDate(today.getDate() - 99);
   const latestNightlies = await getLatestNightlies(today, 100);
-  const { items: nightlies } = latestNightlies.reduce(
+  const { items } = latestNightlies.reduce(
     (accu, item) => {
       const date = new Date(item.startedAt);
       const key = `${date.getUTCFullYear()}-${date.getMonth()}`;
@@ -123,7 +123,7 @@ export async function getStaticProps() {
   );
   return {
     props: {
-      nightlies
+      nightlies: Object.values(items)
     }
   };
 }
