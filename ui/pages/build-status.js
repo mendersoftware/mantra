@@ -46,6 +46,7 @@ const repos = [
   { repo: 'mender-dist-packages', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'mender-docs-site', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-docs', branches: ['master', 'hosted'], staging: false, isExecutable: false, isProduct: false, area: areas.docs },
+  { repo: 'mender-flash', staging: true, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'mender-gateway', staging: true, isExecutable: true, isProduct: true, area: areas.backend },
   { repo: 'mender-helm', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
   { repo: 'mender-image-tests', staging: false, isExecutable: false, isProduct: false, area: areas.client },
