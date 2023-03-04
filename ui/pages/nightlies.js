@@ -66,42 +66,50 @@ const Nightlies = ({ nightlies }) => {
 };
 
 export const getLatestNightlies = async (cutoffDate, limit = 1) => {
-  const query = gql`
-    query getPipeline($date: Time, $limit: Int) {
-      project(fullPath: "Northern.tech/Mender/mender-qa") {
-        pipelines(source: "schedule", ref: "master", first: $limit, updatedAfter: $date) {
-          nodes {
-            path
-            status
-            startedAt
-            testReportSummary {
-              total {
-                count
-                error
-                failed
-                skipped
-                success
-                time
-              }
-            }
-          }
-        }
-      }
+  const gitlabApiMenderQaProject = `https://gitlab.com/api/v4/projects/Northern.tech%2FMender%2Fmender-qa`;
+  const gitlabApiRequestHeaders = {
+    headers: {
+      Authorization: `Bearer ${process.env.GITLAB_TOKEN}`
     }
-  `;
+  };
 
-  const nightlies = await request({
-    url: 'https://gitlab.com/api/graphql',
-    variables: { date: cutoffDate.toISOString().split('T')[0], limit },
-    document: query,
-    requestHeaders: { Authorization: `Bearer ${process.env.GITLAB_TOKEN}` }
+  // Ideally, we would order by started date (desc) and then just get the first `limit` pipelines.
+  // GitLab API does not support this so the workaround is to paginate at `limit` page size, get
+  // the last two pages, and then filter out with `cutoffDate`,
+  const perPage = limit;
+  const canaryResponse = await fetch(`${gitlabApiMenderQaProject}/pipeline_schedules/30585/pipelines?per_page=${perPage}`, gitlabApiRequestHeaders);
+  const totalPages = await canaryResponse.headers.get('x-total-pages');
+  const pipelines = await Promise.all(
+    [totalPages - 1, totalPages].map(page =>
+      fetch(`${gitlabApiMenderQaProject}/pipeline_schedules/30585/pipelines?per_page=${perPage}&page=${page}`, gitlabApiRequestHeaders)
+        .then(res => res.json())
+        .then(data => {
+          return data;
+        })
+    )
+  );
+  const pipelinesFiltered = pipelines
+    .flat()
+    .reverse()
+    .filter(obj => new Date(obj.created_at).setHours(0, 0, 0, 0) >= cutoffDate.setHours(0, 0, 0, 0));
+
+  // Now get the test report summary of each pipeline and construct the final objects to return
+  return Promise.all(
+    pipelinesFiltered.map(obj =>
+      fetch(`${gitlabApiMenderQaProject}/pipelines/${obj.id}/test_report_summary`, gitlabApiRequestHeaders)
+        .then(res => res.json())
+        .then(data => {
+          return {
+            path: obj.web_url.replace(/^https:\/\/gitlab.com/, ''),
+            status: obj.status.toUpperCase(),
+            startedAt: obj.created_at,
+            testReportSummary: { total: data['total'] }
+          };
+        })
+    )
+  ).then(objs => {
+    return objs;
   });
-  const {
-    project: {
-      pipelines: { nodes }
-    }
-  } = nightlies;
-  return nodes;
 };
 
 export async function getStaticProps() {
