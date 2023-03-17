@@ -1,7 +1,5 @@
 import React from 'react';
 
-import { request, gql } from 'graphql-request';
-
 import { Grid, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { Circle } from '@mui/icons-material';
 import { makeStyles } from 'tss-react/mui';
@@ -65,37 +63,38 @@ const Nightlies = ({ nightlies }) => {
   );
 };
 
-export const getLatestNightlies = async (cutoffDate, limit = 1) => {
-  const gitlabApiMenderQaProject = `https://gitlab.com/api/v4/projects/Northern.tech%2FMender%2Fmender-qa`;
-  const gitlabApiRequestHeaders = {
-    headers: {
-      Authorization: `Bearer ${process.env.GITLAB_TOKEN}`
-    }
-  };
+const gitlabApiMenderQaProject = `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-qa')}`;
+const gitlabApiRequestHeaders = { headers: { Authorization: `Bearer ${process.env.GITLAB_TOKEN}` } };
+const gitlabPaginationLimit = 100;
 
-  // Ideally, we would order by started date (desc) and then just get the first `limit` pipelines.
-  // GitLab API does not support this so the workaround is to paginate at `limit` page size, get
-  // the last two pages, and then filter out with `cutoffDate`,
-  const perPage = limit;
-  const canaryResponse = await fetch(`${gitlabApiMenderQaProject}/pipeline_schedules/30585/pipelines?per_page=${perPage}`, gitlabApiRequestHeaders);
-  const totalPages = await canaryResponse.headers.get('x-total-pages');
-  const pipelines = await Promise.all(
-    [totalPages - 1, totalPages].map(page =>
-      fetch(`${gitlabApiMenderQaProject}/pipeline_schedules/30585/pipelines?per_page=${perPage}&page=${page}`, gitlabApiRequestHeaders)
-        .then(res => res.json())
-        .then(data => {
-          return data;
-        })
-    )
+const getNightlies = async (accu, options = {}) => {
+  const { page, limit, cutoffDate } = options;
+  const response = await fetch(
+    `${gitlabApiMenderQaProject}/pipeline_schedules/30585/pipelines?per_page=${gitlabPaginationLimit}&page=${page}`,
+    gitlabApiRequestHeaders
   );
-  const pipelinesFiltered = pipelines
-    .flat()
-    .reverse()
-    .filter(obj => new Date(obj.created_at).setHours(0, 0, 0, 0) >= cutoffDate.setHours(0, 0, 0, 0));
+  const pipelinesFiltered = (await response.json()).filter(obj => new Date(obj.created_at).setHours(0, 0, 0, 0) >= cutoffDate);
+  const pipelines = [...accu, ...pipelinesFiltered.reverse()];
+  if (page - 1 >= 1 && pipelines.length < limit) {
+    return getNightlies(pipelines, { page: Math.max(1, page - 1), limit, cutoffDate });
+  }
+  return pipelines.slice(0, limit);
+};
+
+export const getLatestNightlies = async (cutoffDate, limit = 1) => {
+  cutoffDate.setHours(0, 0, 0, 0);
+  // Ideally, we would order by started date (desc) GitLab API does not support this, so the workaround is to paginate
+  // until we collect pipelines, filter by `cutoffDate` and recurse backwards until we have reached `limit` filtered nightlies
+  const canaryResponse = await fetch(
+    `${gitlabApiMenderQaProject}/pipeline_schedules/30585/pipelines?per_page=${gitlabPaginationLimit}`,
+    gitlabApiRequestHeaders
+  );
+  const totalPages = await canaryResponse.headers.get('x-total-pages');
+  const pipelines = await getNightlies([], { cutoffDate, limit, page: totalPages });
 
   // Now get the test report summary of each pipeline and construct the final objects to return
   return Promise.all(
-    pipelinesFiltered.map(obj =>
+    pipelines.map(obj =>
       fetch(`${gitlabApiMenderQaProject}/pipelines/${obj.id}/test_report_summary`, gitlabApiRequestHeaders)
         .then(res => res.json())
         .then(data => {
@@ -103,19 +102,19 @@ export const getLatestNightlies = async (cutoffDate, limit = 1) => {
             path: obj.web_url.replace(/^https:\/\/gitlab.com/, ''),
             status: obj.status.toUpperCase(),
             startedAt: obj.created_at,
-            testReportSummary: { total: data['total'] }
+            testReportSummary: { total: data.total }
           };
         })
     )
-  ).then(objs => {
-    return objs;
-  });
+  );
 };
 
 export async function getStaticProps() {
+  const limit = 150;
   const today = new Date();
-  today.setDate(today.getDate() - 99);
-  const latestNightlies = await getLatestNightlies(today, 100);
+  // deduct today when setting the cutoff date for the retrieved pipelines
+  today.setDate(today.getDate() - (limit - 1));
+  const latestNightlies = await getLatestNightlies(today, limit);
   const { items } = latestNightlies.reduce(
     (accu, item) => {
       const date = new Date(item.startedAt);
