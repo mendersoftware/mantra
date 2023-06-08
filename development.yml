@@ -7,7 +7,8 @@ services:
   ui:
     build:
       context: ./ui
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: development
     volumes:
       - ./ui/:/work
       - /work/node_modules

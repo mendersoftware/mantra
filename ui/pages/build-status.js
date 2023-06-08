@@ -326,11 +326,10 @@ const getGithubOrganizationState = async () => {
     document: repoQuery,
     requestHeaders: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
   });
+  const { organization = { repositories: {} } } = repoState;
   const {
-    organization: {
-      repositories: { nodes }
-    }
-  } = repoState;
+    repositories: { nodes }
+  } = organization;
   return nodes.reduce(
     (accu, { name, pullRequests }) => {
       const isTrackedHere = repos.some(({ repo }) => repo === name);
