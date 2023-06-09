@@ -84,6 +84,7 @@ build:docker:ui:
       --build-arg AWS_ACCESS_KEY_ID
       --build-arg AWS_SECRET_ACCESS_KEY
       --build-arg GITLAB_TOKEN
+      --build-arg GITHUB_TOKEN=$GITHUB_BOT_TOKEN_REPO_FULL
       --tag $DOCKER_BUILD_SERVICE_IMAGE
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
       ${DOCKER_DIR:-.}

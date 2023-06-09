@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { request, gql } from 'graphql-request';
 import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Typography } from '@mui/material';
 import { Circle, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 
@@ -69,21 +70,35 @@ const repos = [
   { repo: 'workflows', staging: false, isExecutable: false, isProduct: true, area: areas.backend }
 ];
 
-const CoverageDisplay = ({ coverage }) => !!coverage && coverage !== 'unknown' && <Typography color="text.disabled">Coverage: {coverage}%</Typography>;
+const minWidth = { style: { minWidth: 110 } };
+const CoverageDisplay = ({ coverage }) =>
+  !!coverage && coverage !== 'unknown' ? (
+    <Typography color="text.disabled" {...minWidth}>
+      Coverage: {coverage}%
+    </Typography>
+  ) : (
+    <div {...minWidth} />
+  );
 
-const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', coverage }) => (
+const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', coverage, dependabotPendings }) => (
   <Stack direction="row" justifyContent="space-between">
     <Stack direction="row" alignContent="center" spacing={2}>
       <Link href={`https://gitlab.com/Northern.tech/${organization}/${repo}/-/pipelines`}>
         <img alt={`${repo} ${branch} build-status`} src={`https://gitlab.com/Northern.tech/${organization}/${repo}/badges/${branch}/pipeline.svg`} />
       </Link>
-      <Link href={`https://gitlab.com/Northern.tech/${organization}/${repo}/-/commits/${branch}`}>
+      <Link href={`https://github.com/mendersoftware/${repo}/tree/${branch}`} target="_blank">
         <Typography variant="subtitle2">
           {repo} {branch !== 'master' ? branch : ''}
         </Typography>
       </Link>
     </Stack>
-    <Stack direction="row" alignContent="center" spacing={2.5}>
+    <Stack direction="row" alignItems="center" spacing={2.5}>
+      {!!dependabotPendings && (
+        <Link href={`https://github.com/mendersoftware/${repo}/pulls`} target="_blank" style={{ display: 'flex', alignItems: 'center', columnGap: 10 }}>
+          <img alt="dependabot" src="https://avatars.githubusercontent.com/u/27347476?s=20" />
+          <div>({dependabotPendings})</div>
+        </Link>
+      )}
       <CoverageDisplay coverage={coverage} />
       <div style={{ width: '1em' }} />
     </Stack>
@@ -100,7 +115,7 @@ const buildStatusColorMap = {
 
 export const buildStatusColor = status => buildStatusColorMap[status] || buildStatusColorMap.default;
 
-const BuildStatus = ({ componentsByArea, latestNightly, ltsReleases, versions }) => {
+const BuildStatus = ({ componentsByArea, latestNightly, ltsReleases, untracked, versions }) => {
   const { total, ...components } = componentsByArea;
   return (
     <>
@@ -128,8 +143,17 @@ const BuildStatus = ({ componentsByArea, latestNightly, ltsReleases, versions })
             </Stack>
           </AccordionSummary>
           <AccordionDetails>
-            {component.repos.map(({ repo, branches = ['master'], coverage, organization }) =>
-              branches.map(branch => <RepoStatusItem key={`${repo}-${branch}`} repo={repo} branch={branch} coverage={coverage} organization={organization} />)
+            {component.repos.map(({ repo, branches = ['master'], coverage, dependabotPendings, organization }) =>
+              branches.map(branch => (
+                <RepoStatusItem
+                  key={`${repo}-${branch}`}
+                  repo={repo}
+                  branch={branch}
+                  coverage={coverage}
+                  dependabotPendings={dependabotPendings}
+                  organization={organization}
+                />
+              ))
             )}
           </AccordionDetails>
         </Accordion>
@@ -153,6 +177,16 @@ const BuildStatus = ({ componentsByArea, latestNightly, ltsReleases, versions })
           </Accordion>
         );
       })}
+      <Accordion disableGutters>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} id="untracked-header">
+          <Typography variant="h6">Other repos</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          {untracked.map(({ repo, dependabotPendings }) => (
+            <RepoStatusItem key={repo} repo={repo} dependabotPendings={dependabotPendings} />
+          ))}
+        </AccordionDetails>
+      </Accordion>
     </>
   );
 };
@@ -163,16 +197,17 @@ const areaTargetsMap = [
   { name: 'isProduct', target: 'product' }
 ];
 
-const transformReposIntoAreas = () =>
+const transformReposIntoAreas = withDependabot =>
   repos.reduce(
     (accu, item) => {
       if (!(accu[item.area] && Array.isArray(accu[item.area].repos))) {
         accu[item.area] = { repos: [] };
       }
-      accu[item.area].repos.push(item);
+      const { dependabotPendings = 0 } = withDependabot.find(({ name }) => name === item.repo) ?? {};
+      accu[item.area].repos.push({ ...item, dependabotPendings });
       accu = areaTargetsMap.reduce((result, area) => {
         if (item[area.name] || item[area]) {
-          (result[area.target] || result[area]).repos.push(item);
+          (result[area.target] || result[area]).repos.push({ ...item, dependabotPendings });
         }
         return result;
       }, accu);
@@ -265,13 +300,60 @@ const enhanceWithCoverageData = async reposByArea => {
   }, sumEnhanced);
 };
 
+const repoQuery = gql`
+  query getPipeline($login: String!) {
+    organization(login: $login) {
+      repositories(first: 100) {
+        nodes {
+          name
+          pullRequests(states: [OPEN], labels: ["dependencies"], first: 50) {
+            nodes {
+              createdAt
+              url
+            }
+            totalCount
+          }
+        }
+      }
+    }
+  }
+`;
+
+const getGithubOrganizationState = async () => {
+  const repoState = await request({
+    url: 'https://api.github.com/graphql',
+    variables: { login: 'mendersoftware' },
+    document: repoQuery,
+    requestHeaders: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+  });
+  const { organization = { repositories: {} } } = repoState;
+  const {
+    repositories: { nodes }
+  } = organization;
+  return nodes.reduce(
+    (accu, { name, pullRequests }) => {
+      const isTrackedHere = repos.some(({ repo }) => repo === name);
+      const { totalCount } = pullRequests;
+      if (!isTrackedHere) {
+        accu.untracked.push({ repo: name, dependabotPendings: totalCount });
+      }
+      if (totalCount) {
+        accu.withDependabot.push({ name, dependabotPendings: totalCount });
+      }
+      return accu;
+    },
+    { untracked: [], withDependabot: [] }
+  );
+};
+
 export async function getStaticProps() {
   const cutoffDate = new Date();
   cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
   const aYearAgo = cutoffDate.toISOString().split('T')[0];
   const versionsInfo = await fetch('https://docs.mender.io/releases/versions.json');
   const versions = await versionsInfo.json();
-  const reposByArea = transformReposIntoAreas();
+  const { untracked, withDependabot } = await getGithubOrganizationState();
+  const reposByArea = transformReposIntoAreas(withDependabot);
   const { client, executable, staging, ...remainder } = reposByArea;
   const shownVersions = Object.entries(versions.releases).reduce((accu, [version, releaseInfo]) => {
     const { firstReleaseDate, repos } = extractReleaseInfo(releaseInfo);
@@ -291,6 +373,7 @@ export async function getStaticProps() {
       componentsByArea,
       latestNightly: latestNightly[0],
       ltsReleases: versions.lts,
+      untracked,
       versions: shownVersions
     }
   };
