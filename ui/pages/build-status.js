@@ -323,6 +323,9 @@ const repoQuery = gql`
 `;
 
 const getGithubOrganizationState = async () => {
+  if (!process.env.GITHUB_TOKEN) {
+    return { untracked: [], withDependabot: [] };
+  }
   const repoState = await request({
     url: 'https://api.github.com/graphql',
     variables: { login: 'mendersoftware' },
@@ -368,13 +371,13 @@ export async function getStaticProps() {
     return accu;
   }, {});
 
-  const latestNightly = await getLatestNightlies(new Date(), 1);
+  const latestNightlies = await getLatestNightlies(new Date(), 1);
   const coverageCollection = await enhanceWithCoverageData({ ...remainder, client });
   const { product: dropHereToo, ...componentsByArea } = coverageCollection;
   return {
     props: {
       componentsByArea,
-      latestNightly: latestNightly[0],
+      latestNightly: latestNightlies.length ? latestNightlies[0] : {},
       ltsReleases: versions.lts,
       untracked,
       versions: shownVersions
