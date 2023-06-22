@@ -183,7 +183,7 @@ const persistLogData = async fileContents =>
 
 export async function getStaticProps() {
   if (!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY)) {
-    return process.exit(1);
+    return { props: { results: [] } };
   }
 
   const s3Client = new S3Client({ region: REGION });

@@ -68,6 +68,9 @@ const gitlabApiRequestHeaders = { headers: { Authorization: `Bearer ${process.en
 const gitlabPaginationLimit = 100;
 
 const getNightlies = async (accu, options = {}) => {
+  if (!process.env.GITLAB_TOKEN) {
+    return [];
+  }
   const { page, limit, cutoffDate } = options;
   const response = await fetch(
     `${gitlabApiMenderQaProject}/pipeline_schedules/30585/pipelines?per_page=${gitlabPaginationLimit}&page=${page}`,

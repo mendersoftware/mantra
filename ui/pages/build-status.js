@@ -29,6 +29,7 @@ const repos = [
   { repo: 'devicemonitor', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
   { repo: 'generate-delta-worker', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
   { repo: 'go-lib-micro', staging: false, isExecutable: false, isProduct: false, area: areas.backend },
+  { repo: 'grub-mender-grubenv', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'gui', staging: true, isExecutable: false, isProduct: true, area: areas.frontend },
   { repo: 'integration-test-runner', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'integration', staging: true, isExecutable: false, isProduct: false, area: areas.qa },
@@ -45,6 +46,7 @@ const repos = [
   { repo: 'mender-convert', staging: true, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'mender-demo-artifact', staging: false, isExecutable: false, isProduct: false, area: areas.frontend },
   { repo: 'mender-dist-packages', staging: false, isExecutable: false, isProduct: false, area: areas.client },
+  { repo: 'mender-docs-changelog', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-docs-site', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-docs', branches: ['master', 'hosted'], staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-flash', staging: true, isExecutable: true, isProduct: true, area: areas.client },
@@ -56,6 +58,7 @@ const repos = [
   { repo: 'mender', staging: true, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'mendertesting', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'meta-mender', staging: true, isExecutable: false, isProduct: true, area: areas.client },
+  { repo: 'monitor-client', staging: false, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'mtls-ambassador', staging: true, isExecutable: true, isProduct: true, area: areas.backend },
   { repo: 'openssl', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'progressbar', staging: false, isExecutable: false, isProduct: false, area: areas.client },
@@ -320,6 +323,9 @@ const repoQuery = gql`
 `;
 
 const getGithubOrganizationState = async () => {
+  if (!process.env.GITHUB_TOKEN) {
+    return { untracked: [], withDependabot: [] };
+  }
   const repoState = await request({
     url: 'https://api.github.com/graphql',
     variables: { login: 'mendersoftware' },
@@ -365,13 +371,13 @@ export async function getStaticProps() {
     return accu;
   }, {});
 
-  const latestNightly = await getLatestNightlies(new Date(), 1);
+  const latestNightlies = await getLatestNightlies(new Date(), 1);
   const coverageCollection = await enhanceWithCoverageData({ ...remainder, client });
   const { product: dropHereToo, ...componentsByArea } = coverageCollection;
   return {
     props: {
       componentsByArea,
-      latestNightly: latestNightly[0],
+      latestNightly: latestNightlies.length ? latestNightlies[0] : {},
       ltsReleases: versions.lts,
       untracked,
       versions: shownVersions
