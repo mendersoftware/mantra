@@ -15,6 +15,11 @@ include:
   - project: 'Northern.tech/Mender/mendertesting'
     file: '.gitlab-ci-github-status-updates.yml'
 
+# Disable Mender specific job
+publish:image:mender:
+  rules:
+    - when: never
+
 test:check-python3-formatting:
   tags:
     - mender-qa-worker-generic-light
