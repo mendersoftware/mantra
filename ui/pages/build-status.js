@@ -53,6 +53,8 @@ const repos = [
   { repo: 'mender-gateway', staging: true, isExecutable: true, isProduct: true, area: areas.backend },
   { repo: 'mender-helm', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
   { repo: 'mender-image-tests', staging: false, isExecutable: false, isProduct: false, area: areas.client },
+  { repo: 'mender-setup', staging: false, isExecutable: false, isProduct: true, area: areas.client },
+  { repo: 'mender-snapshot', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'mender-stress-test-client', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'mender-test-containers', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'mender', staging: true, isExecutable: true, isProduct: true, area: areas.client },
