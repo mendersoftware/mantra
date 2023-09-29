@@ -202,28 +202,15 @@ export async function getStaticProps() {
     }
     accu.push(
       ...vulnerabilities.map((vulnerability, index) => {
-        const {
-          VulnerabilityID,
-          PkgName,
-          References = null,
-          PrimaryURL,
-          Severity,
-          InstalledVersion,
-          FixedVersion = null,
-          PublishedDate = null,
-          Title = null
-        } = vulnerability;
+        const { VulnerabilityID, PkgName, Severity, InstalledVersion, PublishedDate = null, Title = null } = vulnerability;
         return {
           id: `${image}-${VulnerabilityID}-${index}`,
           image,
           logfile,
           VulnerabilityID,
           PkgName,
-          References,
-          PrimaryURL,
           Severity,
           InstalledVersion,
-          FixedVersion,
           PublishedDate,
           Title
         };
