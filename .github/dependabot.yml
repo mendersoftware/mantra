@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - commit-message:
+      prefix: chore
+    directory: /ui
+    open-pull-requests-limit: 20
+    package-ecosystem: npm
+    schedule:
+      interval: monthly
+      day: saturday
+    groups:
+      development-dependencies:
+        dependency-type: development
+      production-dependencies:
+        dependency-type: production
+  - commit-message:
+      prefix: chore
+    directory: /ui
+    package-ecosystem: docker
+    schedule:
+      interval: monthly
+      day: saturday
+  - commit-message:
+      prefix: chore
+    directory: /backend
+    open-pull-requests-limit: 10
+    package-ecosystem: docker
+    schedule:
+      interval: monthly
+      day: saturday
