@@ -88,7 +88,7 @@ const CoverageDisplay = ({ coverage }) =>
 const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', coverage, dependabotPendings }) => (
   <Stack direction="row" justifyContent="space-between">
     <Stack direction="row" alignContent="center" spacing={2}>
-      <Link href={`https://gitlab.com/Northern.tech/${organization}/${repo}/-/pipelines`}>
+      <Link href={`https://gitlab.com/Northern.tech/${organization}/${repo}/-/pipelines?ref=${branch}`}>
         <img alt={`${repo} ${branch} build-status`} src={`https://gitlab.com/Northern.tech/${organization}/${repo}/badges/${branch}/pipeline.svg`} />
       </Link>
       <Link href={`https://github.com/mendersoftware/${repo}/tree/${branch}`} target="_blank">
