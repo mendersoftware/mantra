@@ -1,4 +1,4 @@
-FROM python:3.6-alpine
+FROM python:3.12-alpine
 ENV PYTHONUNBUFFERED 1
 WORKDIR /tetra
 RUN apk add --no-cache postgresql-libs && \
