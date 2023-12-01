@@ -40,17 +40,19 @@ class PostgresClient(DatabaseClient):
     def create(self, resource):
         data = resource.to_dict()
         query = resource.TABLE.insert().values(**data)
-        result = self.engine.execute(query)
-        resource.id = result.inserted_primary_key[0]
-        return resource
+        with self.engine.connect() as conn:
+            result = conn.execute(query)
+            conn.commit()
+            resource.id = result.inserted_primary_key[0]
+            return resource
 
     def create_many(self, resources):
         if not resources:
             return
         table = resources[0].TABLE
-        result = self.engine.execute(table.insert(),
-                                     [r.to_dict() for r in resources])
-        result.close()
+        with self.engine.connect() as conn:
+            conn.execute(table.insert(), [r.to_dict() for r in resources])
+            conn.commit()
 
     def update(self, resource_id, resource):
         pass
@@ -58,19 +60,21 @@ class PostgresClient(DatabaseClient):
     def delete(self, resource_id, resource_class):
         table = resource_class.TABLE
         query = table.delete().where(table.c.id == int(resource_id))
-        result = self.engine.execute(query)
-        result.close()
+        with self.engine.connect() as conn:
+            conn.execute(query)
+            conn.commit()
 
     def get(self, resource_id, resource_class):
         table = resource_class.TABLE
         query = table.select().where(table.c.id == int(resource_id))
-        result = self.engine.execute(query)
-        if result.rowcount == 0:
-            return
-        row = result.fetchone()
-        data = {key: value for key, value in zip(result.keys(), row)}
-        result.close()
-        return resource_class.from_dict(data)
+        with self.engine.connect() as conn:
+            result = conn.execute(query)
+            conn.commit()
+            if result.rowcount == 0:
+                return
+            row = result.fetchone()
+            data = {key: value for key, value in zip(result.keys(), row)}
+            return resource_class.from_dict(data)
 
     def get_all(self, resource_class, query=None, limit=None, offset=None):
         if query is None:
@@ -81,11 +85,14 @@ class PostgresClient(DatabaseClient):
         if offset is not None:
             query = query.offset(offset)
 
-        result = self.engine.execute(query)
-        rows = result.fetchall()
-        data = []
-        for row in rows:
-            resource = {key: value for key, value in zip(result.keys(), row)}
-            data.append(resource)
-        result.close()
-        return data
+        with self.engine.connect() as conn:
+            result = conn.execute(query)
+            conn.commit()
+            rows = result.fetchall()
+            data = []
+            for row in rows:
+                resource = {
+                    key: value for key, value in zip(result.keys(), row)
+                }
+                data.append(resource)
+            return data
