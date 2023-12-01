@@ -43,7 +43,7 @@ test:backend-unit:
   variables:
     POSTGRES_PASSWORD: password
     POSTGRES_DB: mantra-db
-  image: python:3.6
+  image: python:3.12
   before_script:
     - cd backend
     - pip install -r requirements.txt
