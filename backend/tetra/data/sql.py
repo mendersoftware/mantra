@@ -71,6 +71,6 @@ results_table = Table(
 
 
 def db_connect(database_dict):
-    engine = create_engine(URL(**database_dict))
+    engine = create_engine(URL.create(**database_dict))
     metadata.create_all(engine)
     return engine

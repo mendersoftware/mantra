@@ -110,7 +110,7 @@ class Result(BaseModel):
             #   order by build_id desc
             #   limit kwargs['count']
             # )
-            query_by_build_name = select([Build.TABLE.c.id]).select_from(
+            query_by_build_name = select(Build.TABLE.c.id).select_from(
                     Build.TABLE).where(
                         and_(
                             Build.TABLE.c.project_id == kwargs['project_id'],
@@ -149,7 +149,7 @@ class Result(BaseModel):
             #   order by build_id desc
             #   limit kwargs['count']
             # )
-            query_by_build_name = select([Build.TABLE.c.id]).select_from(
+            query_by_build_name = select(Build.TABLE.c.id).select_from(
                     Build.TABLE).where(
                         Build.TABLE.c.project_id == kwargs['project_id'],
                         ).order_by(
@@ -186,7 +186,7 @@ class Result(BaseModel):
         handler = handler or get_handler()
 
         query = select(
-            [cls.TABLE.c.result, func.count(cls.TABLE.c.result).label("count")]
+            cls.TABLE.c.result, func.count(cls.TABLE.c.result).label("count")
         ).where(and_clause).group_by(cls.TABLE.c.result)
         count_results = handler.get_all(resource_class=Result, query=query)
 
