@@ -13,6 +13,8 @@ updates:
         dependency-type: development
       production-dependencies:
         dependency-type: production
+    reviewers:
+      - "mendersoftware/frontend-dependabot-reviewers"
   - commit-message:
       prefix: chore
     directory: /ui
@@ -20,6 +22,8 @@ updates:
     schedule:
       interval: monthly
       day: saturday
+    reviewers:
+      - "mendersoftware/frontend-dependabot-reviewers"
   - commit-message:
       prefix: chore
     directory: /backend
@@ -28,6 +32,8 @@ updates:
     schedule:
       interval: monthly
       day: saturday
+    reviewers:
+      - "mendersoftware/qa-dependabot-reviewers"
   - commit-message:
       prefix: chore
     directory: /backend
@@ -39,3 +45,5 @@ updates:
       python-backend-dependencies:
         patterns:
           - "*"
+    reviewers:
+      - "mendersoftware/qa-dependabot-reviewers"
