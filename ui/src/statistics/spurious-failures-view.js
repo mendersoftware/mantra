@@ -58,8 +58,8 @@ const SpuriousFailuresView = props => {
             rows={results}
             columns={columns}
             pageSize={10}
-            rowsPerPageOptions={[10]}
-            disableSelectionOnClick
+            pageSizeOptions={[10]}
+            disableRowSelectionOnClick
             loading={loading}
           />
         </Box>
