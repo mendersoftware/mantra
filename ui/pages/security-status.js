@@ -76,7 +76,7 @@ const columns = [
   { field: 'VulnerabilityID', headerName: 'Vulnerability ID', flex: 1 },
   { field: 'Severity', headerName: 'Severity', flex: 0.5 },
   { field: 'InstalledVersion', headerName: 'Installed Version', flex: 1 },
-  { field: 'PublishedDate', headerName: 'Published Date', type: 'dateTime', flex: 1 },
+  { field: 'PublishedDate', headerName: 'Published Date', flex: 1 },
   { field: 'Title', headerName: 'Title', flex: 1, renderCell: renderCellExpand },
   { field: 'logfile', headerName: 'Report Logs', flex: 0.5, sortable: false, renderCell: params => <Link href={params.row.logfile}>SEE LOGS</Link> }
 ];
@@ -94,12 +94,12 @@ const SecurityStatus = ({ results }) => {
       </div>
       <div style={{ height: '70vh', width: '100%' }}>
         <DataGrid
-          filterModel={{ items: isFiltered ? [{ columnField: 'image', operatorValue: 'contains', value: 'mendersoftware' }] : [] }}
+          filterModel={{ items: isFiltered ? [{ field: 'image', operator: 'contains', value: 'mendersoftware' }] : [] }}
           rows={results}
           columns={columns}
           pageSize={50}
-          rowsPerPageOptions={[50]}
-          disableSelectionOnClick
+          pageSizeOptions={[50]}
+          disableRowSelectionOnClick
         />
       </div>
     </>

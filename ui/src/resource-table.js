@@ -171,8 +171,8 @@ const ResourceTable = ({ resources, type }) => {
       rows={rows}
       columns={columns}
       pageSize={10}
-      rowsPerPageOptions={[10]}
-      disableSelectionOnClick
+      pageSizeOptions={[10]}
+      disableRowSelectionOnClick
       disableColumnSelector
       disableDensitySelector
       loading={resources.length == 0}
