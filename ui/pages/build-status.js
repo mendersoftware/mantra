@@ -57,6 +57,7 @@ const repos = [
   { repo: 'mender-snapshot', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'mender-stress-test-client', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'mender-test-containers', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
+  { repo: 'mender-update-orchestrator', staging: false, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'mender', staging: true, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'mendertesting', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'meta-mender', staging: true, isExecutable: false, isProduct: true, area: areas.client },
