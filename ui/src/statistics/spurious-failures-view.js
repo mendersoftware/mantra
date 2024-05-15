@@ -13,7 +13,7 @@ const columns = [
   { field: 'count', headerName: '# Failures', flex: 1 }
 ];
 
-const minInputDate = new Date(2020, 1, 1);
+const minInputDate = dayjs(new Date(2020, 1, 1));
 
 const SpuriousFailuresView = props => {
   const [sinceDate, setSinceDate] = useState(dayjs().subtract(7, 'day'));
@@ -48,7 +48,7 @@ const SpuriousFailuresView = props => {
           label="Since Date"
           value={sinceDate}
           onChange={handleChange}
-          maxDate={new Date()}
+          maxDate={dayjs()}
           minDate={minInputDate}
           renderInput={params => <TextField {...params} />}
         />
