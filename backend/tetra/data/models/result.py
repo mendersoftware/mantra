@@ -228,26 +228,30 @@ class Result(BaseModel):
 
         handler = handler or get_handler()
 
-        bt = Build.TABLE
-        rt = cls.TABLE
+        results_table = cls.TABLE
         ands = [
-            bt.c.name.like(f"{type}%"),
-            rt.c.timestamp > since_time,
-            ]
+            Build.TABLE.c.name.like(f"{type}%"),
+            results_table.c.timestamp > since_time,
+        ]
         if test_name:
-            ands.append(rt.c.test_name == test_name)
-        orm_statement = select(
-            [rt.c.test_name,
-             func.count(rt.c.result).label("count")]
-        ).select_from(
-            rt.join(Build.TABLE)
-        ).where(and_(
-            or_(
-                rt.c.result.in_(status),
-            ),
-            *ands,
-        )).group_by(rt.c.test_name).order_by(func.count(rt.c.result).desc())
+            ands.append(results_table.c.test_name == test_name)
 
-        return handler.get_all(
-            resource_class=cls, query=orm_statement,
-            limit=100)
+        orm_statement = (
+            select(
+                results_table.c.test_name,
+                func.count(results_table.c.result).label("count"),
+            )
+            .select_from(results_table.join(Build.TABLE))
+            .where(
+                and_(
+                    or_(
+                        results_table.c.result.in_(status),
+                    ),
+                    *ands,
+                )
+            )
+            .group_by(results_table.c.test_name)
+            .order_by(func.count(results_table.c.result).desc())
+        )
+
+        return handler.get_all(resource_class=cls, query=orm_statement, limit=100)
