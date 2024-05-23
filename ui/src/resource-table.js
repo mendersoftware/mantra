@@ -136,8 +136,8 @@ const tableColumnDefinitions = {
       field: 'timestamp',
       headerName: 'TimeStamp',
       sortable: true,
-      valueGetter: params => {
-        const date = new Date(params.row.timestamp * 1000);
+      valueGetter: value => {
+        const date = new Date(value * 1000);
         return date.toLocaleDateString();
       },
       minWidth: 200
