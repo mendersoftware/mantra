@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import falcon
 import json
 
@@ -38,10 +39,7 @@ class VersionResource(object):
         # build a json response based on all ROUTE
         routes = [cl.ROUTE for cl in RESOURCES]
 
-        version = {
-                'version': 'v1',
-                'resources': routes
-                }
+        version = {"version": "v1", "resources": routes}
         resp.text = json.dumps(version)
 
 

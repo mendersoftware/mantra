@@ -13,13 +13,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from tetra.data.models.base import DictSerializer
 
 
 class ResultMetadata(DictSerializer):
 
-    def __init__(self, total_passed, total_failures, total_errors,
-                 total_skipped, total_results=None, success_rate=None):
+    def __init__(
+        self,
+        total_passed,
+        total_failures,
+        total_errors,
+        total_skipped,
+        total_results=None,
+        success_rate=None,
+    ):
         self.total_passed = int(total_passed)
         self.total_failures = int(total_failures)
         self.total_errors = int(total_errors)
@@ -27,13 +35,20 @@ class ResultMetadata(DictSerializer):
 
         self.total_results = total_results
         if self.total_results is None:
-            self.total_results = sum([self.total_passed, self.total_failures,
-                                      self.total_errors, self.total_skipped])
+            self.total_results = sum(
+                [
+                    self.total_passed,
+                    self.total_failures,
+                    self.total_errors,
+                    self.total_skipped,
+                ]
+            )
 
         self.success_rate = success_rate
         if self.success_rate is None:
             self.success_rate = self.compute_success_rate(
-                self.total_passed, self.total_skipped, self.total_results)
+                self.total_passed, self.total_skipped, self.total_results
+            )
 
     @classmethod
     def compute_success_rate(cls, passed, skipped, total):
@@ -73,7 +88,7 @@ class ResultMetadata(DictSerializer):
     def from_database_counts(cls, count_results):
         """Create a ResultMetadata from any list of dicts that looks like:
 
-            [{"result": "passed", "count": 123}, ...]
+        [{"result": "passed", "count": 123}, ...]
         """
         total_failures = 0
         total_errors = 0

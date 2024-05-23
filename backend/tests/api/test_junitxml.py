@@ -24,24 +24,22 @@ class TestJunitXmlResults(BaseResultTest):
                 self.project_id, self.build_id, self.junit_xml_string
             )
 
-            metadata = resp.json()['metadata']
-            self.assertEqual(metadata['total_passed'], 3)
-            self.assertEqual(metadata['total_skipped'], 4)
-            self.assertEqual(metadata['total_failures'], 5)
-            self.assertEqual(metadata['total_errors'], 6)
-            self.assertEqual(metadata['total_results'], 18)
-            self.assertEqual(metadata['success_rate'], 21.43)
+            metadata = resp.json()["metadata"]
+            self.assertEqual(metadata["total_passed"], 3)
+            self.assertEqual(metadata["total_skipped"], 4)
+            self.assertEqual(metadata["total_failures"], 5)
+            self.assertEqual(metadata["total_errors"], 6)
+            self.assertEqual(metadata["total_results"], 18)
+            self.assertEqual(metadata["success_rate"], 21.43)
 
         # we've posted the same junit xml twice. the metadata returned when
         # listing all results for the build_id should reflect this.
-        resp = self.client.list_results(
-            self.project_id, self.build_id
-        )
+        resp = self.client.list_results(self.project_id, self.build_id)
 
-        metadata = resp.json()['metadata']
-        self.assertEqual(metadata['total_passed'], 6)
-        self.assertEqual(metadata['total_skipped'], 8)
-        self.assertEqual(metadata['total_failures'], 10)
-        self.assertEqual(metadata['total_errors'], 12)
-        self.assertEqual(metadata['total_results'], 36)
-        self.assertEqual(metadata['success_rate'], 21.43)
+        metadata = resp.json()["metadata"]
+        self.assertEqual(metadata["total_passed"], 6)
+        self.assertEqual(metadata["total_skipped"], 8)
+        self.assertEqual(metadata["total_failures"], 10)
+        self.assertEqual(metadata["total_errors"], 12)
+        self.assertEqual(metadata["total_results"], 36)
+        self.assertEqual(metadata["success_rate"], 21.43)

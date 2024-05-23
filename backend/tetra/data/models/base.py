@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from tetra.config import cfg
 from tetra.data.db_handler import get_handler
 
@@ -63,9 +64,9 @@ class BaseModel(DictSerializer):
         and_clause = None
         for key, value in kwargs.items():
             if and_clause is None:
-                and_clause = (getattr(cls.TABLE.c, key) == value)
+                and_clause = getattr(cls.TABLE.c, key) == value
             else:
-                and_clause &= (getattr(cls.TABLE.c, key) == value)
+                and_clause &= getattr(cls.TABLE.c, key) == value
         return and_clause
 
     @classmethod
@@ -88,11 +89,14 @@ class BaseModel(DictSerializer):
 
         and_clause = cls._and_clause(**kwargs)
         query = cls._get_all_query(
-            and_clause=and_clause, limit=limit, offset=offset,
+            and_clause=and_clause,
+            limit=limit,
+            offset=offset,
         )
 
-        return handler.get_all(resource_class=cls, query=query, limit=limit,
-                               offset=offset)
+        return handler.get_all(
+            resource_class=cls, query=query, limit=limit, offset=offset
+        )
 
     @classmethod
     def delete(cls, resource_id, handler=None):

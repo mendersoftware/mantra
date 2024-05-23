@@ -13,7 +13,9 @@ def resp_to_string(resp):
         return "<resp is None!>"
     msg = "\n----------------- Request -----------------"
     msg += "\n[{2}] {0} {1}".format(
-        resp.request.method, resp.request.url, resp.status_code,
+        resp.request.method,
+        resp.request.url,
+        resp.status_code,
     )
     for k, v in resp.request.headers.items():
         msg += "\n{0}: {1}".format(k, v)
@@ -29,7 +31,7 @@ def resp_to_string(resp):
         msg += "\n{0}... <truncated>".format(resp.text[:1000])
     else:
         msg += "\n{0}".format(resp.text)
-    return msg + '\n'
+    return msg + "\n"
 
 
 def log_response(f):
@@ -38,4 +40,5 @@ def log_response(f):
         resp = f(*args, **kwargs)
         LOG.debug(resp_to_string(resp))
         return resp
+
     return wrapped
