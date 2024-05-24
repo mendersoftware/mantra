@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import falcon
 import json
 
@@ -24,7 +25,7 @@ from tetra.data.models.result import Result
 
 
 def make_error_body(msg):
-    return json.dumps({'error': msg})
+    return json.dumps({"error": msg})
 
 
 class Resources(object):
@@ -54,14 +55,14 @@ class Resource(object):
         resp.status = falcon.HTTP_200
         resource_id = kwargs.get(self.RESOURCE_ID_KEY)
         result = self.RESOURCE_CLASS.get(resource_id=resource_id)
-        resp.content_type = 'application/json'
+        resp.content_type = "application/json"
         if result:
             resp.body = json.dumps(result.to_dict())
         else:
             resp.status = falcon.HTTP_404
             resp.body = make_error_body(
-                "{0} {1} not found.".format(self.RESOURCE_CLASS.__name__,
-                                            resource_id))
+                "{0} {1} not found.".format(self.RESOURCE_CLASS.__name__, resource_id)
+            )
 
     def on_delete(self, req, resp, **kwargs):
         resp.status = falcon.HTTP_204
@@ -139,16 +140,13 @@ class ResultsResource(Resources):
         return super(ResultsResource, self).on_post(req, resp, **kwargs)
 
     def _is_junit_xml_request(self, req):
-        return req.content_type and 'application/xml' in req.content_type
+        return req.content_type and "application/xml" in req.content_type
 
     def _on_post_junitxml(self, req, resp, **kwargs):
         resp.status = falcon.HTTP_201
 
         suite, _ = xunitparser.parse(req.stream)
-        results = [
-            Result.from_junit_xml_test_case(case, **kwargs)
-            for case in suite
-        ]
+        results = [Result.from_junit_xml_test_case(case, **kwargs) for case in suite]
         response_data = Result.create_many(results, **kwargs)
         resp.body = json.dumps(response_data)
 
@@ -169,6 +167,7 @@ class SpuriousResource(Resource):
     status: <[list of statuses to query]> (default 'failed' and 'error')
     test_name: <none (default) | name>
     """
+
     ROUTE = "/tests/statistics/spurious-failures/"
     RESOURCE_CLASS = Result
 

@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import time
 
 from sqlalchemy import desc
@@ -29,13 +30,21 @@ class Result(BaseModel):
 
     TABLE = sql.results_table
 
-    def __init__(self, test_name, result, project_id, build_id, id=None,
-                 timestamp=None,  result_message=None, tags=None):
+    def __init__(
+        self,
+        test_name,
+        result,
+        project_id,
+        build_id,
+        id=None,
+        timestamp=None,
+        result_message=None,
+        tags=None,
+    ):
         if id:
             self.id = int(id)
 
-        self.test_name = truncate(test_name,
-                                  self.TABLE.c.test_name.type.length)
+        self.test_name = truncate(test_name, self.TABLE.c.test_name.type.length)
         self.project_id = int(project_id)
         self.build_id = int(build_id)
         self.timestamp = int(timestamp or time.time())
@@ -61,17 +70,30 @@ class Result(BaseModel):
             result=result_type,
             project_id=project_id,
             build_id=build_id,
-            result_message=case.trace
+            result_message=case.trace,
         )
 
     @classmethod
-    def get_all(cls, handler=None, limit=None, offset=None, project_id=None,
-                test_name=None, build_id=None, timestamp=None, result=None,
-                result_message=None, **tag_filters):
+    def get_all(
+        cls,
+        handler=None,
+        limit=None,
+        offset=None,
+        project_id=None,
+        test_name=None,
+        build_id=None,
+        timestamp=None,
+        result=None,
+        result_message=None,
+        **tag_filters,
+    ):
         handler = handler or get_handler()
         and_clause = cls._and_clause(
-            project_id=project_id, test_name=test_name, build_id=build_id,
-            timestamp=timestamp, result=result,
+            project_id=project_id,
+            test_name=test_name,
+            build_id=build_id,
+            timestamp=timestamp,
+            result=result,
             result_message=result_message,
         )
 
@@ -92,14 +114,15 @@ class Result(BaseModel):
         return results_dict
 
     @classmethod
-    def get_last_count_by_status(cls, handler=None, limit=None, offset=None,
-                                 **kwargs):
+    def get_last_count_by_status(cls, handler=None, limit=None, offset=None, **kwargs):
         handler = handler or get_handler()
-        if (kwargs and
-                'project_id' in kwargs and
-                'build_name' in kwargs and
-                'status' in kwargs and
-                'count' in kwargs):
+        if (
+            kwargs
+            and "project_id" in kwargs
+            and "build_name" in kwargs
+            and "status" in kwargs
+            and "count" in kwargs
+        ):
 
             # select * from results
             # where status = kwargs['status']
@@ -110,36 +133,46 @@ class Result(BaseModel):
             #   order by build_id desc
             #   limit kwargs['count']
             # )
-            query_by_build_name = select(Build.TABLE.c.id).select_from(
-                    Build.TABLE).where(
-                        and_(
-                            Build.TABLE.c.project_id == kwargs['project_id'],
-                            Build.TABLE.c.name == kwargs['build_name']
-                        )).order_by(
-                                desc(Build.TABLE.c.id)
-                            ).limit(
-                                kwargs['count']
-                            )
+            query_by_build_name = (
+                select(Build.TABLE.c.id)
+                .select_from(Build.TABLE)
+                .where(
+                    and_(
+                        Build.TABLE.c.project_id == kwargs["project_id"],
+                        Build.TABLE.c.name == kwargs["build_name"],
+                    )
+                )
+                .order_by(desc(Build.TABLE.c.id))
+                .limit(kwargs["count"])
+            )
 
             last_count_by_status_query = cls.TABLE.select().where(
-                    and_(
-                        cls.TABLE.c.result == kwargs['status'],
-                        cls.TABLE.c.build_id.in_(query_by_build_name)))
+                and_(
+                    cls.TABLE.c.result == kwargs["status"],
+                    cls.TABLE.c.build_id.in_(query_by_build_name),
+                )
+            )
 
             return handler.get_all(
-                resource_class=cls, query=last_count_by_status_query,
-                limit=limit, offset=offset)
+                resource_class=cls,
+                query=last_count_by_status_query,
+                limit=limit,
+                offset=offset,
+            )
         else:
             return []
 
     @classmethod
-    def get_last_count_by_test_name(cls, handler=None, limit=None, offset=None,
-                                    **kwargs):
+    def get_last_count_by_test_name(
+        cls, handler=None, limit=None, offset=None, **kwargs
+    ):
         handler = handler or get_handler()
-        if (kwargs and
-                'project_id' in kwargs and
-                'test_name' in kwargs and
-                'count' in kwargs):
+        if (
+            kwargs
+            and "project_id" in kwargs
+            and "test_name" in kwargs
+            and "count" in kwargs
+        ):
 
             # select * from results
             # where build_id in (
@@ -149,23 +182,29 @@ class Result(BaseModel):
             #   order by build_id desc
             #   limit kwargs['count']
             # )
-            query_by_build_name = select(Build.TABLE.c.id).select_from(
-                    Build.TABLE).where(
-                        Build.TABLE.c.project_id == kwargs['project_id'],
-                        ).order_by(
-                                desc(Build.TABLE.c.id)
-                            ).limit(
-                                kwargs['count']
-                            )
+            query_by_build_name = (
+                select(Build.TABLE.c.id)
+                .select_from(Build.TABLE)
+                .where(
+                    Build.TABLE.c.project_id == kwargs["project_id"],
+                )
+                .order_by(desc(Build.TABLE.c.id))
+                .limit(kwargs["count"])
+            )
 
             last_count_by_status_query = cls.TABLE.select().where(
-                    and_(
-                        cls.TABLE.c.test_name == kwargs['test_name'],
-                        cls.TABLE.c.build_id.in_(query_by_build_name)))
+                and_(
+                    cls.TABLE.c.test_name == kwargs["test_name"],
+                    cls.TABLE.c.build_id.in_(query_by_build_name),
+                )
+            )
 
             return handler.get_all(
-                resource_class=cls, query=last_count_by_status_query,
-                limit=limit, offset=offset)
+                resource_class=cls,
+                query=last_count_by_status_query,
+                limit=limit,
+                offset=offset,
+            )
         else:
             return []
 
@@ -185,21 +224,24 @@ class Result(BaseModel):
     def _get_results_metadata(cls, and_clause, handler=None):
         handler = handler or get_handler()
 
-        query = select(
-            cls.TABLE.c.result, func.count(cls.TABLE.c.result).label("count")
-        ).where(and_clause).group_by(cls.TABLE.c.result)
+        query = (
+            select(cls.TABLE.c.result, func.count(cls.TABLE.c.result).label("count"))
+            .where(and_clause)
+            .group_by(cls.TABLE.c.result)
+        )
         count_results = handler.get_all(resource_class=Result, query=query)
 
         return ResultMetadata.from_database_counts(count_results)
 
     @classmethod
     def get_test_stats(
-            cls,
-            handler=None,
-            type="nightly",
-            test_name=None,
-            status=["failed", "error"],
-            since_time=0):
+        cls,
+        handler=None,
+        type="nightly",
+        test_name=None,
+        status=["failed", "error"],
+        since_time=0,
+    ):
         """Returns the spurious failures in our nightlies for the given time
         interval [time_since, now]
 
@@ -228,26 +270,30 @@ class Result(BaseModel):
 
         handler = handler or get_handler()
 
-        bt = Build.TABLE
-        rt = cls.TABLE
+        results_table = cls.TABLE
         ands = [
-            bt.c.name.like(f"{type}%"),
-            rt.c.timestamp > since_time,
-            ]
+            Build.TABLE.c.name.like(f"{type}%"),
+            results_table.c.timestamp > since_time,
+        ]
         if test_name:
-            ands.append(rt.c.test_name == test_name)
-        orm_statement = select(
-            [rt.c.test_name,
-             func.count(rt.c.result).label("count")]
-        ).select_from(
-            rt.join(Build.TABLE)
-        ).where(and_(
-            or_(
-                rt.c.result.in_(status),
-            ),
-            *ands,
-        )).group_by(rt.c.test_name).order_by(func.count(rt.c.result).desc())
+            ands.append(results_table.c.test_name == test_name)
 
-        return handler.get_all(
-            resource_class=cls, query=orm_statement,
-            limit=100)
+        orm_statement = (
+            select(
+                results_table.c.test_name,
+                func.count(results_table.c.result).label("count"),
+            )
+            .select_from(results_table.join(Build.TABLE))
+            .where(
+                and_(
+                    or_(
+                        results_table.c.result.in_(status),
+                    ),
+                    *ands,
+                )
+            )
+            .group_by(results_table.c.test_name)
+            .order_by(func.count(results_table.c.result).desc())
+        )
+
+        return handler.get_all(resource_class=cls, query=orm_statement, limit=100)

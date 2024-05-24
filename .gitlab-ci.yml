@@ -30,7 +30,7 @@ test:check-python3-formatting:
     - pip install tox
     - cd backend
   script:
-    - TOXENV=flake8 tox
+    - TOXENV=black tox
 
 test:backend-unit:
   tags:

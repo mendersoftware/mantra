@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from tetra.config import cfg
 from tetra.data.database_client import DatabaseClient
 from tetra.data.sql import db_connect
@@ -20,12 +21,12 @@ from tetra.data.sql import db_connect
 conf = cfg.CONF
 
 DATABASE = {
-    'drivername': 'postgresql',
-    'host': conf.sqlalchemy.host,
-    'port': conf.sqlalchemy.port,
-    'username': conf.sqlalchemy.username,
-    'password': conf.sqlalchemy.password,
-    'database': conf.sqlalchemy.database
+    "drivername": "postgresql",
+    "host": conf.sqlalchemy.host,
+    "port": conf.sqlalchemy.port,
+    "username": conf.sqlalchemy.username,
+    "password": conf.sqlalchemy.password,
+    "database": conf.sqlalchemy.database,
 }
 
 
@@ -91,8 +92,6 @@ class PostgresClient(DatabaseClient):
             rows = result.fetchall()
             data = []
             for row in rows:
-                resource = {
-                    key: value for key, value in zip(result.keys(), row)
-                }
+                resource = {key: value for key, value in zip(result.keys(), row)}
                 data.append(resource)
             return data
