@@ -62,7 +62,6 @@ const repos = [
   { repo: 'mendertesting', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'meta-mender', staging: true, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'monitor-client', staging: false, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mtls-ambassador', staging: true, isExecutable: true, isProduct: true, area: areas.backend },
   { repo: 'openssl', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'progressbar', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'reporting', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
