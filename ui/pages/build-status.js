@@ -11,31 +11,15 @@ const areas = {
   backend: 'backend',
   client: 'client',
   docs: 'docs',
-  frontend: 'frontend',
   saas: 'saas',
   qa: 'qa'
 };
 
 const repos = [
   { repo: 'app-update-module', staging: false, isExecutable: false, isProduct: true, area: areas.client },
-  { repo: 'auditlogs', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'create-artifact-worker', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'deployments-enterprise', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'deployments', staging: false, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'deviceauth-enterprise', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'deviceauth', staging: false, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'deviceconfig', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'deviceconnect', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'devicemonitor', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'generate-delta-worker', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'go-lib-micro', staging: false, isExecutable: false, isProduct: false, area: areas.backend },
   { repo: 'grub-mender-grubenv', staging: false, isExecutable: false, isProduct: true, area: areas.client },
-  { repo: 'gui', staging: true, isExecutable: false, isProduct: true, area: areas.frontend },
   { repo: 'integration-test-runner', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'integration', staging: true, isExecutable: false, isProduct: false, area: areas.qa },
-  { repo: 'inventory-enterprise', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'inventory', staging: false, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'iot-manager', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
   { repo: 'mender-api-docs', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-api-gateway-docker', staging: false, isExecutable: false, isProduct: false, area: areas.backend },
   { repo: 'mender-artifact', staging: true, isExecutable: true, isProduct: true, area: areas.client },
@@ -44,7 +28,7 @@ const repos = [
   { repo: 'mender-configure-module', staging: true, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'mender-connect', staging: true, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'mender-convert', staging: true, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mender-demo-artifact', staging: false, isExecutable: false, isProduct: false, area: areas.frontend },
+  { repo: 'mender-demo-artifact', staging: false, isExecutable: false, isProduct: false, area: areas.backend },
   { repo: 'mender-dist-packages', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'mender-docs-changelog', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-docs-site', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
@@ -53,6 +37,8 @@ const repos = [
   { repo: 'mender-gateway', staging: true, isExecutable: true, isProduct: true, area: areas.backend },
   { repo: 'mender-helm', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
   { repo: 'mender-image-tests', staging: false, isExecutable: false, isProduct: false, area: areas.client },
+  { repo: 'mender-server', branches: ['main'], staging: false, isExecutable: false, isProduct: true, area: areas.backend },
+  { repo: 'mender-server-enterprise', branches: ['main'], staging: true, isExecutable: false, isProduct: true, area: areas.backend },
   { repo: 'mender-setup', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'mender-snapshot', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'mender-stress-test-client', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
@@ -64,15 +50,9 @@ const repos = [
   { repo: 'monitor-client', staging: false, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'openssl', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'progressbar', staging: false, isExecutable: false, isProduct: false, area: areas.client },
-  { repo: 'reporting', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
   { repo: 'saas-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
   { repo: 'saas', organization: 'MenderSaas', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
-  { repo: 'sre-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
-  { repo: 'tenantadm', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'useradm-enterprise', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'useradm', staging: false, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'workflows-enterprise', staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'workflows', staging: false, isExecutable: false, isProduct: true, area: areas.backend }
+  { repo: 'sre-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas }
 ];
 
 const minWidth = { style: { minWidth: 110 } };
