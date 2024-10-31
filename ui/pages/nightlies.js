@@ -23,7 +23,7 @@ const Nightlies = ({ nightlies }) => {
   const { classes } = useStyles();
   return (
     <>
-      <Typography variant="h4">Nightlies</Typography>
+      <Typography variant="h4">Mender Client Acceptance Tests</Typography>
       <Stack className={classes.builds}>
         {nightlies.map(monthlyNightlies => {
           const date = new Date(monthlyNightlies[0].startedAt);
