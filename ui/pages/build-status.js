@@ -16,43 +16,43 @@ const areas = {
 };
 
 const repos = [
-  { repo: 'app-update-module', staging: false, isExecutable: false, isProduct: true, area: areas.client },
-  { repo: 'grub-mender-grubenv', staging: false, isExecutable: false, isProduct: true, area: areas.client },
-  { repo: 'integration-test-runner', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
-  { repo: 'integration', staging: true, isExecutable: false, isProduct: false, area: areas.qa },
-  { repo: 'mender-api-docs', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
-  { repo: 'mender-api-gateway-docker', staging: false, isExecutable: false, isProduct: false, area: areas.backend },
-  { repo: 'mender-artifact', staging: true, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mender-binary-delta', staging: true, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mender-cli', staging: true, isExecutable: true, isProduct: true, area: areas.backend },
-  { repo: 'mender-configure-module', staging: true, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mender-connect', staging: true, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mender-convert', staging: true, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mender-demo-artifact', staging: false, isExecutable: false, isProduct: false, area: areas.backend },
-  { repo: 'mender-dist-packages', staging: false, isExecutable: false, isProduct: false, area: areas.client },
-  { repo: 'mender-docs-changelog', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
-  { repo: 'mender-docs-site', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
-  { repo: 'mender-docs', branches: ['master', 'hosted'], staging: false, isExecutable: false, isProduct: false, area: areas.docs },
-  { repo: 'mender-flash', staging: true, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mender-gateway', staging: true, isExecutable: true, isProduct: true, area: areas.backend },
-  { repo: 'mender-helm', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
-  { repo: 'mender-image-tests', staging: false, isExecutable: false, isProduct: false, area: areas.client },
-  { repo: 'mender-server', branches: ['main'], staging: false, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'mender-server-enterprise', branches: ['main'], staging: true, isExecutable: false, isProduct: true, area: areas.backend },
-  { repo: 'mender-setup', staging: false, isExecutable: false, isProduct: true, area: areas.client },
-  { repo: 'mender-snapshot', staging: false, isExecutable: false, isProduct: true, area: areas.client },
-  { repo: 'mender-stress-test-client', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
-  { repo: 'mender-test-containers', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
-  { repo: 'mender-update-orchestrator', staging: false, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mender', staging: true, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mendertesting', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
-  { repo: 'meta-mender', staging: true, isExecutable: false, isProduct: true, area: areas.client },
-  { repo: 'monitor-client', staging: false, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'openssl', staging: false, isExecutable: false, isProduct: false, area: areas.client },
-  { repo: 'progressbar', staging: false, isExecutable: false, isProduct: false, area: areas.client },
-  { repo: 'saas-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
-  { repo: 'saas', organization: 'MenderSaas', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
-  { repo: 'sre-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas }
+  { repo: 'app-update-module', isExecutable: false, isProduct: true, area: areas.client },
+  { repo: 'grub-mender-grubenv', isExecutable: false, isProduct: true, area: areas.client },
+  { repo: 'integration-test-runner', isExecutable: false, isProduct: false, area: areas.qa },
+  { repo: 'integration', isExecutable: false, isProduct: false, area: areas.qa },
+  { repo: 'mender-api-docs', isExecutable: false, isProduct: false, area: areas.docs },
+  { repo: 'mender-api-gateway-docker', isExecutable: false, isProduct: false, area: areas.backend },
+  { repo: 'mender-artifact', isExecutable: true, isProduct: true, area: areas.client },
+  { repo: 'mender-binary-delta', isExecutable: true, isProduct: true, area: areas.client },
+  { repo: 'mender-cli', isExecutable: true, isProduct: true, area: areas.backend },
+  { repo: 'mender-configure-module', isExecutable: true, isProduct: true, area: areas.client },
+  { repo: 'mender-connect', isExecutable: true, isProduct: true, area: areas.client },
+  { repo: 'mender-convert', isExecutable: true, isProduct: true, area: areas.client },
+  { repo: 'mender-demo-artifact', isExecutable: false, isProduct: false, area: areas.backend },
+  { repo: 'mender-dist-packages', isExecutable: false, isProduct: false, area: areas.client },
+  { repo: 'mender-docs-changelog', isExecutable: false, isProduct: false, area: areas.docs },
+  { repo: 'mender-docs-site', isExecutable: false, isProduct: false, area: areas.docs },
+  { repo: 'mender-docs', branches: ['master', 'hosted'], isExecutable: false, isProduct: false, area: areas.docs },
+  { repo: 'mender-flash', isExecutable: true, isProduct: true, area: areas.client },
+  { repo: 'mender-gateway', isExecutable: true, isProduct: true, area: areas.backend },
+  { repo: 'mender-helm', isExecutable: false, isProduct: false, area: areas.saas },
+  { repo: 'mender-image-tests', isExecutable: false, isProduct: false, area: areas.client },
+  { repo: 'mender-server', branches: ['main'], isExecutable: false, isProduct: true, area: areas.backend },
+  { repo: 'mender-server-enterprise', branches: ['main'], isExecutable: false, isProduct: true, area: areas.backend },
+  { repo: 'mender-setup', isExecutable: false, isProduct: true, area: areas.client },
+  { repo: 'mender-snapshot', isExecutable: false, isProduct: true, area: areas.client },
+  { repo: 'mender-stress-test-client', isExecutable: false, isProduct: false, area: areas.qa },
+  { repo: 'mender-test-containers', isExecutable: false, isProduct: false, area: areas.qa },
+  { repo: 'mender-update-orchestrator', isExecutable: true, isProduct: true, area: areas.client },
+  { repo: 'mender', isExecutable: true, isProduct: true, area: areas.client },
+  { repo: 'mendertesting', isExecutable: false, isProduct: false, area: areas.qa },
+  { repo: 'meta-mender', isExecutable: false, isProduct: true, area: areas.client },
+  { repo: 'monitor-client', isExecutable: true, isProduct: true, area: areas.client },
+  { repo: 'openssl', isExecutable: false, isProduct: false, area: areas.client },
+  { repo: 'progressbar', isExecutable: false, isProduct: false, area: areas.client },
+  { repo: 'saas-tools', isExecutable: false, isProduct: false, area: areas.saas },
+  { repo: 'saas', organization: 'MenderSaas', isExecutable: false, isProduct: false, area: areas.saas },
+  { repo: 'sre-tools', isExecutable: false, isProduct: false, area: areas.saas }
 ];
 
 const minWidth = { style: { minWidth: 110 } };
@@ -177,7 +177,6 @@ const BuildStatus = ({ componentsByArea, latestNightly, ltsReleases, untracked, 
 };
 
 const areaTargetsMap = [
-  { name: 'staging', target: 'staging' },
   { name: 'isExecutable', target: 'executable' },
   { name: 'isProduct', target: 'product' }
 ];
@@ -215,23 +214,6 @@ const extractReleaseInfo = releaseInfo =>
     },
     { firstReleaseDate: '', releaseDate: '', repos: [] }
   );
-
-const findRepoInRepoInfo = (repos, repoName) => repos.find(repoInfo => repoName === repoInfo.repo);
-
-const collectStagingInfo = (result, repos, clientRepos, stagingRepos, executableRepos) => {
-  if (result) {
-    return result;
-  }
-  return repos.reduce((accu, repo) => {
-    const repoInfo = findRepoInRepoInfo(stagingRepos, repo.name);
-    if (!repoInfo) {
-      return accu;
-    }
-    const shouldShowVersion = findRepoInRepoInfo(clientRepos, repo.name) || findRepoInRepoInfo(executableRepos, repo.name);
-    accu.push({ ...repoInfo, ...repo, version: shouldShowVersion ? repo.version : 'staging' });
-    return accu;
-  }, []);
-};
 
 const badgeUrl = 'badges/coveralls_';
 const retrieveCoverageInfo = async repoInfo => {
@@ -342,13 +324,12 @@ export async function getStaticProps() {
   const versions = await versionsInfo.json();
   const { untracked, withDependabot } = await getGithubOrganizationState();
   const reposByArea = transformReposIntoAreas(withDependabot);
-  const { client, executable, staging, ...remainder } = reposByArea;
+  const { client, executable, ...remainder } = reposByArea;
   const shownVersions = Object.entries(versions.releases).reduce((accu, [version, releaseInfo]) => {
     const { firstReleaseDate, repos } = extractReleaseInfo(releaseInfo);
     if (firstReleaseDate < aYearAgo && !versions.lts.includes(version)) {
       return accu;
     }
-    accu.staging = collectStagingInfo(accu.staging, repos, client.repos, staging.repos, executable.repos);
     accu[version] = repos.map(repo => ({ ...repo, version: `${repo.version.substring(0, repo.version.lastIndexOf('.'))}.x` }));
     return accu;
   }, {});
