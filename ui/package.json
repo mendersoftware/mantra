@@ -23,10 +23,10 @@
     "tss-react": "^4.9.13"
   },
   "devDependencies": {
-    "eslint": "9.13.0",
-    "eslint-config-next": "15.0.2",
+    "eslint": "9.16.0",
+    "eslint-config-next": "15.0.3",
     "eslint-plugin-prettier": "^5.2.1",
-    "prettier": "^3.3.3"
+    "prettier": "^3.4.1"
   },
   "scripts": {
     "autobuild": "next dev",
