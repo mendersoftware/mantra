@@ -20,7 +20,8 @@
     "next": "^15.1.4",
     "react": "~19.0.0",
     "react-dom": "~19.0.0",
-    "tss-react": "^4.9.14"
+    "tss-react": "^4.9.14",
+    "react-big-calendar": "1.17.1"
   },
   "devDependencies": {
     "eslint": "9.17.0",
