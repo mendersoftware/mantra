@@ -347,7 +347,7 @@ export async function getStaticProps() {
   const latestNightlies = await getLatestNightlies(
     new Date(),
     1,
-    pipelines.find(pipeline => pipeline.name === 'mender QA')
+    pipelines.find(pipeline => pipeline.name === 'Mender Client Acceptance Tests')
   );
   const coverageCollection = await enhanceWithCoverageData({ ...remainder, client });
   const { product: dropHereToo, ...componentsByArea } = coverageCollection;

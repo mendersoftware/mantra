@@ -47,26 +47,27 @@ const gitlabApiRequestHeaders = { headers: { Authorization: `Bearer ${process.en
 const gitlabPaginationLimit = 100;
 export const pipelines = [
   {
-    name: 'integration',
+    name: 'Integration',
     url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/integration')}`,
     pipelineScheduleId: 2676039
   },
   {
-    name: 'mender QA',
+    name: 'Mender Client Acceptance Tests',
     url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-qa')}`,
     pipelineScheduleId: 30585
+  },
+  {
+    name: 'mender-server-enterprise',
+    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-server-enterprise')}`,
+    pipelineScheduleId: 2738797
+  },
+  {
+    name: 'mender-server',
+    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-server')}`,
+    pipelineScheduleId: 2738796
   }
-  // {
-  //   name: 'mender-server-enterprise',
-  //   url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-server-enterprise')}`,
-  //   pipelineScheduleId: 0
-  // },
-  // {
-  //   name: 'mender-server',
-  //   url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-server')}`,
-  //   pipelineScheduleId: 0
-  // }
 ];
+export const order = pipelines.map(pipeline => pipeline.name);
 
 const getNightlies = async (accu, options = {}, pipeline) => {
   if (!process.env.GITLAB_TOKEN) {
