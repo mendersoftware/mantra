@@ -35,7 +35,7 @@ class Resources(object):
         resp.status = falcon.HTTP_200
         kwargs.update(req.params)
         results = self.RESOURCE_CLASS.get_all(**kwargs)
-        resp.body = json.dumps(results)
+        resp.text = json.dumps(results)
 
     def on_post(self, req, resp, **kwargs):
         resp.status = falcon.HTTP_201
@@ -44,7 +44,7 @@ class Resources(object):
         data_dict.update(kwargs)
         resource = self.RESOURCE_CLASS.from_dict(data_dict)
         created_resource = self.RESOURCE_CLASS.create(resource=resource)
-        resp.body = json.dumps(created_resource.to_dict())
+        resp.text = json.dumps(created_resource.to_dict())
 
 
 class Resource(object):
@@ -57,10 +57,10 @@ class Resource(object):
         result = self.RESOURCE_CLASS.get(resource_id=resource_id)
         resp.content_type = "application/json"
         if result:
-            resp.body = json.dumps(result.to_dict())
+            resp.text = json.dumps(result.to_dict())
         else:
             resp.status = falcon.HTTP_404
-            resp.body = make_error_body(
+            resp.text = make_error_body(
                 "{0} {1} not found.".format(self.RESOURCE_CLASS.__name__, resource_id)
             )
 
@@ -94,7 +94,7 @@ class BuildsResource(Resources):
         resource = self.RESOURCE_CLASS.from_dict(data_dict)
         created_resource = self.RESOURCE_CLASS.create(resource=resource)
         created_dict = created_resource.to_dict()
-        resp.body = json.dumps(created_dict)
+        resp.text = json.dumps(created_dict)
 
 
 class BuildResource(Resource):
@@ -111,7 +111,7 @@ class LastCountByStatusResultsResource(Resources):
         resp.status = falcon.HTTP_200
         kwargs.update(req.params)
         results = self.RESOURCE_CLASS.get_last_count_by_status(**kwargs)
-        resp.body = json.dumps(results)
+        resp.text = json.dumps(results)
 
 
 class LastCountByTestNameResultsResource(Resources):
@@ -122,7 +122,7 @@ class LastCountByTestNameResultsResource(Resources):
         resp.status = falcon.HTTP_200
         kwargs.update(req.params)
         results = self.RESOURCE_CLASS.get_last_count_by_test_name(**kwargs)
-        resp.body = json.dumps(results)
+        resp.text = json.dumps(results)
 
 
 class ProjectResultsResource(Resources):
@@ -148,7 +148,7 @@ class ResultsResource(Resources):
         suite, _ = xunitparser.parse(req.stream)
         results = [Result.from_junit_xml_test_case(case, **kwargs) for case in suite]
         response_data = Result.create_many(results, **kwargs)
-        resp.body = json.dumps(response_data)
+        resp.text = json.dumps(response_data)
 
 
 class ResultResource(Resource):
