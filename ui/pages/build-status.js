@@ -5,7 +5,8 @@ import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Typograph
 import { Circle, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 
 import Link from '../components/link';
-import { getLatestNightlies, openNightlyClick } from './nightlies';
+import { getLatestNightlies, pipelines } from './nightlies';
+import { buildStatusColor, openNightlyClick } from '../src/constants';
 
 const areas = {
   backend: 'backend',
@@ -89,16 +90,6 @@ const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', cove
     </Stack>
   </Stack>
 );
-
-const buildStatusColorMap = {
-  CANCELED: 'inherit',
-  FAILED: 'error',
-  RUNNING: 'warning',
-  SUCCESS: 'success',
-  default: 'secondary' // WTF is going on colour! - we can't use a color variant string here (like warning.dark), as a color prop
-};
-
-export const buildStatusColor = status => buildStatusColorMap[status] || buildStatusColorMap.default;
 
 const BuildStatus = ({ componentsByArea, latestNightly, ltsReleases, untracked, versions }) => {
   const { total, ...components } = componentsByArea;
@@ -353,7 +344,11 @@ export async function getStaticProps() {
     return accu;
   }, {});
 
-  const latestNightlies = await getLatestNightlies(new Date(), 1);
+  const latestNightlies = await getLatestNightlies(
+    new Date(),
+    1,
+    pipelines.find(pipeline => pipeline.name === 'Mender Client Acceptance Tests')
+  );
   const coverageCollection = await enhanceWithCoverageData({ ...remainder, client });
   const { product: dropHereToo, ...componentsByArea } = coverageCollection;
   return {
