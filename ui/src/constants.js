@@ -7,4 +7,3 @@ const buildStatusColorMap = {
 };
 
 export const buildStatusColor = status => buildStatusColorMap[status] || buildStatusColorMap.default;
-export const openNightlyClick = item => window.open(`https://gitlab.com${item.path}`, '_newtab');
