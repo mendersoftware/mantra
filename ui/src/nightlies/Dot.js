@@ -23,9 +23,11 @@ export const Dot = props => {
           </>
         }
       >
-        <IconButton color={buildStatusColor(item.status)} edge="start" onClick={() => openNightlyClick(item)} size="small">
-          <Circle color={buildStatusColor(item.status)} />
-        </IconButton>
+        <a href={`https://gitlab.com${item.path}`} target="_blank">
+          <IconButton color={buildStatusColor(item.status)} edge="start" size="small">
+            <Circle color={buildStatusColor(item.status)} />
+          </IconButton>
+        </a>
       </Tooltip>
       {!!Number(item.testReportSummary.total.failed) && (
         <Typography style={isTopRow && { position: 'absolute', top: '10px' }} variant="caption">
