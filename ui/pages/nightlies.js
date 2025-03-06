@@ -47,9 +47,14 @@ const gitlabApiRequestHeaders = { headers: { Authorization: `Bearer ${process.en
 const gitlabPaginationLimit = 100;
 export const pipelines = [
   {
-    name: 'Integration',
+    name: 'Integration mender-server:main',
     url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/integration')}`,
     pipelineScheduleId: 2676039
+  },
+  {
+    name: 'Integration mender-server:4.0.x',
+    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/integration')}`,
+    pipelineScheduleId: 2766723
   },
   {
     name: 'Mender Client Acceptance Tests',
