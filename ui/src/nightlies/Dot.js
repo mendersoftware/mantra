@@ -4,10 +4,9 @@ import { Circle } from '@mui/icons-material';
 import { buildStatusColor, openNightlyClick } from '../constants';
 
 export const Dot = props => {
-  const { item, index } = props;
-  const isTopRow = index < 2;
+  const { item } = props;
   return (
-    <Stack key={item.path} alignItems="center" style={{ flexDirection: isTopRow ? 'column-reverse' : 'column' }}>
+    <Stack key={item.path} alignItems="center">
       <Tooltip
         arrow
         title={
@@ -29,11 +28,7 @@ export const Dot = props => {
           </IconButton>
         </a>
       </Tooltip>
-      {!!Number(item.testReportSummary.total.failed) && (
-        <Typography style={isTopRow && { position: 'absolute', top: '10px' }} variant="caption">
-          {item.testReportSummary.total.failed}
-        </Typography>
-      )}
+      {!!Number(item.testReportSummary.total.failed) && <Typography variant="caption">{item.testReportSummary.total.failed}</Typography>}
     </Stack>
   );
 };
