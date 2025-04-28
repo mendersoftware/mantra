@@ -11,6 +11,16 @@ const eventContainerStyles = {
   flexWrap: 'wrap',
   justifyContent: 'center'
 };
+
+// rough measurements to determine a usable calendar height screen sizes
+const rowScale = 2.75;
+const errorRowHeight = 55;
+const dateHeaderHeight = 23;
+const weekCount = 5;
+const titleHeight = 39;
+const monthHeaderHeight = 21;
+const height = (rowScale * errorRowHeight + dateHeaderHeight) * weekCount + monthHeaderHeight + titleHeight;
+
 const Event = ({ event }) => {
   const runs = order.reduce((acc, name) => {
     const run = event.data.find(pipeLineRun => pipeLineRun.name === name);
@@ -64,7 +74,8 @@ export const PipelineCalendar = props => {
       endAccessor="end"
       events={events}
       toolbar={true}
-      style={{ height: 600 }}
+      style={{ height }}
+      views={{ month: true }}
     />
   );
 };
