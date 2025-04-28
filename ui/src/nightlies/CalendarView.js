@@ -9,8 +9,7 @@ import { order } from '../../pages/nightlies';
 const eventContainerStyles = {
   display: 'flex',
   flexWrap: 'wrap',
-  margin: 'auto',
-  width: '60px'
+  justifyContent: 'center'
 };
 const Event = ({ event }) => {
   const runs = order.reduce((acc, name) => {
