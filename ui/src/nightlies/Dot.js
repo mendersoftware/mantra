@@ -1,7 +1,7 @@
 import React from 'react';
 import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { Circle } from '@mui/icons-material';
-import { buildStatusColor, openNightlyClick } from '../constants';
+import { buildStatusColor } from '../constants';
 
 export const Dot = props => {
   const { item } = props;
