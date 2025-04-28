@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { Calendar, dayjsLocalizer } from 'react-big-calendar';
 import dayjs from 'dayjs';
 const localizer = dayjsLocalizer(dayjs);
@@ -9,9 +9,18 @@ import { order } from '../../pages/nightlies';
 const eventContainerStyles = {
   display: 'flex',
   flexWrap: 'wrap',
-  margin: 'auto',
-  width: '60px'
+  justifyContent: 'center'
 };
+
+// rough measurements to determine a usable calendar height screen sizes
+const rowScale = 2.75;
+const errorRowHeight = 55;
+const dateHeaderHeight = 23;
+const weekCount = 5;
+const titleHeight = 39;
+const monthHeaderHeight = 21;
+const height = (rowScale * errorRowHeight + dateHeaderHeight) * weekCount + monthHeaderHeight + titleHeight;
+
 const Event = ({ event }) => {
   const runs = order.reduce((acc, name) => {
     const run = event.data.find(pipeLineRun => pipeLineRun.name === name);
@@ -65,7 +74,8 @@ export const PipelineCalendar = props => {
       endAccessor="end"
       events={events}
       toolbar={true}
-      style={{ height: 600 }}
+      style={{ height }}
+      views={{ month: true }}
     />
   );
 };
