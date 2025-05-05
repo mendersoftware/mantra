@@ -1,7 +1,7 @@
 import React from 'react';
 import { Grid, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { Circle } from '@mui/icons-material';
-import { buildStatusColor, openNightlyClick } from '../constants';
+import { buildStatusColor } from '../constants';
 import { makeStyles } from 'tss-react/mui';
 
 const useStyles = makeStyles()(theme => ({
@@ -44,9 +44,11 @@ export const PipelineListView = props => {
                           </>
                         }
                       >
-                        <IconButton color={buildStatusColor(item.status)} edge="start" onClick={() => openNightlyClick(item)} size="small">
-                          <Circle color={buildStatusColor(item.status)} />
-                        </IconButton>
+                        <a href={`https://gitlab.com${item.path}`} target="_blank">
+                          <IconButton color={buildStatusColor(item.status)} edge="start" size="small">
+                            <Circle color={buildStatusColor(item.status)} />
+                          </IconButton>
+                        </a>
                       </Tooltip>
                       {!!Number(item.testReportSummary.total.failed) && <Typography variant="caption">{item.testReportSummary.total.failed}</Typography>}
                     </Stack>
