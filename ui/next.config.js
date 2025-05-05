@@ -1,4 +1,5 @@
 module.exports = {
   output: 'export',
-  reactStrictMode: true
+  reactStrictMode: true,
+  transpilePackages: ['@mui/x-data-grid']
 };

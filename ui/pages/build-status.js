@@ -6,7 +6,7 @@ import { Circle, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 
 import Link from '../components/link';
 import { getLatestNightlies, pipelines } from './nightlies';
-import { buildStatusColor, openNightlyClick } from '../src/constants';
+import { buildStatusColor } from '../src/constants';
 
 const areas = {
   backend: 'backend',
@@ -100,14 +100,11 @@ const BuildStatus = ({ componentsByArea, latestNightly, ltsReleases, untracked, 
         <Typography variant="h4">Build Status</Typography>
         <Stack direction="row" alignItems="center" spacing={2}>
           <CoverageDisplay coverage={total.coverage} />
-          <Button
-            variant="outlined"
-            title={latestNightly.startedAt}
-            onClick={() => openNightlyClick(latestNightly)}
-            endIcon={<Circle color={buildStatusColor(latestNightly.status)} />}
-          >
-            latest Nightly
-          </Button>
+          <a href={`https://gitlab.com${latestNightly.path}`} target="_blank">
+            <Button variant="outlined" title={latestNightly.startedAt} endIcon={<Circle color={buildStatusColor(latestNightly.status)} />}>
+              latest Nightly
+            </Button>
+          </a>
         </Stack>
       </Stack>
 
