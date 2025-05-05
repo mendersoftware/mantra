@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
+import { DataGrid } from '@mui/x-data-grid';
 
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import Link from '../components/link';
 
@@ -164,22 +164,21 @@ const ResourceTable = ({ resources, type }) => {
   }
 
   return (
-    <DataGrid
-      autoHeight
-      showQuickFilter
-      initialState={initialState}
-      rows={rows}
-      columns={columns}
-      pageSize={10}
-      pageSizeOptions={[10]}
-      disableRowSelectionOnClick
-      disableColumnSelector
-      disableDensitySelector
-      loading={resources.length == 0}
-      components={{
-        Toolbar: GridToolbar
-      }}
-    />
+    <Box display="flex" flexDirection="column">
+      <DataGrid
+        showQuickFilter
+        initialState={initialState}
+        rows={rows}
+        columns={columns}
+        pageSize={10}
+        pageSizeOptions={[10]}
+        disableRowSelectionOnClick
+        disableColumnSelector
+        disableDensitySelector
+        loading={resources.length == 0}
+        showToolbar
+      />
+    </Box>
   );
 };
 
