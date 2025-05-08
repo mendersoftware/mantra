@@ -166,6 +166,7 @@ class SpuriousResource(Resource):
     since_time: <int> (the time to return statistics from)
     status: <[list of statuses to query]> (default 'failed' and 'error')
     test_name: <none (default) | name>
+    project: <project id or name> (optional)
     """
 
     ROUTE = "/tests/statistics/spurious-failures/"
@@ -176,3 +177,28 @@ class SpuriousResource(Resource):
         kwargs.update(req.params)
         results = self.RESOURCE_CLASS.get_test_stats(**kwargs)
         resp.text = json.dumps(results)
+
+class FalsePositiveResource(Resource):
+    """Endpoint to mark/unmark test results as false positive."""
+
+    ROUTE          = "/results/{result_id}/false-positive"
+    RESOURCE_CLASS = Result
+    RESOURCE_ID_KEY = "result_id"
+
+    def on_get(self, req, resp, **kwargs):
+        resp.status = falcon.HTTP_405
+        resp.text   = json.dumps({"error": "Method Not Allowed"})
+
+    def on_post(self, req, resp, result_id, **kwargs):
+        resp.status = falcon.HTTP_200
+        result = self.RESOURCE_CLASS.get(resource_id=result_id)
+        result.false_positive = True
+        updated = self.RESOURCE_CLASS.update(resource=result)
+        resp.text = json.dumps(updated.to_dict())
+
+    def on_delete(self, req, resp, result_id, **kwargs):
+        resp.status = falcon.HTTP_200
+        result = self.RESOURCE_CLASS.get(resource_id=result_id)
+        result.false_positive = False
+        updated = self.RESOURCE_CLASS.update(resource=result)
+        resp.text = json.dumps(updated.to_dict())

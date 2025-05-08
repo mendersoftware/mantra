@@ -2,7 +2,7 @@ import React from 'react';
 
 import { DataGrid } from '@mui/x-data-grid';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Checkbox } from '@mui/material';
 
 import Link from '../components/link';
 
@@ -131,6 +131,21 @@ const tableColumnDefinitions = {
         return '';
       },
       minWidth: 100
+    },
+    {
+      field: 'false_positive',
+      headerName: 'False Positive',
+      renderCell: params => (
+        <Checkbox
+          checked={params.row.false_positive}
+          onChange={() => {
+            const resultId = params.row.id;
+            const method = params.row.false_positive ? 'DELETE' : 'POST';
+            fetch(`/api/results/${resultId}/false-positive`, { method }).then(() => window.location.reload());
+          }}
+        />
+      ),
+      sortable: false
     },
     {
       field: 'timestamp',

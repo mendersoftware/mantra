@@ -28,6 +28,7 @@ from .api.resources import (
     ProjectsResource,
     ProjectResource,
     SpuriousResource,
+    FalsePositiveResource,
 )
 
 
@@ -57,6 +58,7 @@ RESOURCES = [
     ProjectResource(),
     VersionResource(),
     SpuriousResource(),
+    FalsePositiveResource(),
 ]
 for resource in RESOURCES:
     application.add_route(resource.ROUTE, resource)

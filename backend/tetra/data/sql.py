@@ -14,10 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from sqlalchemy import Table, Column, MetaData, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Table, Column, MetaData, ForeignKey, Index, Integer, String, Text, Boolean
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine.url import URL
+import sqlalchemy as sa
 
 # plain JSON is inferior to JSONB in postgres.
 # JSONB supports indexing and is stored as binary.
@@ -71,6 +72,7 @@ results_table = Table(
     Column("result", String(256), nullable=False),
     Column("result_message", Text, nullable=True),
     Column("tags", JSONB, nullable=False),
+    Column("false_positive", Boolean, nullable=False, server_default=sa.false()),
     Index("result_index", "project_id", "build_id", "result"),
     Index("result_tags_index", "tags", postgresql_using="gin"),
 )
