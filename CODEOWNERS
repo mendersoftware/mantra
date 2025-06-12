@@ -1,0 +1,5 @@
+# Frontend related directories
+/ui/ @mendersoftware/frontend-dependabot-reviewers
+
+# Backend related directories
+/backend/ @mendersoftware/qa-dependabot-reviewers
