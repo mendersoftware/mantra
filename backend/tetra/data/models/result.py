@@ -40,6 +40,7 @@ class Result(BaseModel):
         timestamp=None,
         result_message=None,
         tags=None,
+        false_positive=False,
     ):
         if id:
             self.id = int(id)
@@ -51,6 +52,7 @@ class Result(BaseModel):
         self.result = truncate(result, self.TABLE.c.result.type.length)
         self.result_message = result_message
         self.tags = tags or {}
+        self.false_positive = false_positive
 
     @classmethod
     def from_junit_xml_test_case(cls, case, project_id, build_id):
@@ -72,6 +74,15 @@ class Result(BaseModel):
             build_id=build_id,
             result_message=case.trace,
         )
+
+    @classmethod
+    def update(cls, resource, handler=None):
+        """
+        Persist changes to this Result instance back to the database.
+        """
+        handler = handler or get_handler()
+        updated = handler.update(resource=resource, resource_id=resource.id)
+        return updated
 
     @classmethod
     def get_all(
@@ -237,6 +248,7 @@ class Result(BaseModel):
     def get_test_stats(
         cls,
         handler=None,
+        project=None,
         type="nightly",
         test_name=None,
         status=["failed", "error"],
@@ -272,16 +284,27 @@ class Result(BaseModel):
 
         results_table = cls.TABLE
         ands = [
+            results_table.c.false_positive == False,
             Build.TABLE.c.name.like(f"{type}%"),
             results_table.c.timestamp > since_time,
         ]
         if test_name:
             ands.append(results_table.c.test_name == test_name)
+        if project:
+            try:
+                project_id = int(project)
+            except ValueError:
+                project_obj = Project.get_all(handler, name=project)
+                project_id = project_obj[0].id if project_obj else None
+            if project_id:
+                ands.append(results_table.c.project_id == project_id)
 
         orm_statement = (
             select(
                 results_table.c.test_name,
                 func.count(results_table.c.result).label("count"),
+                results_table.c.project_id,
+                results_table.c.false_positive,
             )
             .select_from(results_table.join(Build.TABLE))
             .where(
@@ -292,7 +315,11 @@ class Result(BaseModel):
                     *ands,
                 )
             )
-            .group_by(results_table.c.test_name)
+            .group_by(
+                results_table.c.test_name,
+                results_table.c.project_id,
+                results_table.c.false_positive,
+            )
             .order_by(func.count(results_table.c.result).desc())
         )
 

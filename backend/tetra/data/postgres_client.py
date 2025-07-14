@@ -56,7 +56,23 @@ class PostgresClient(DatabaseClient):
             conn.commit()
 
     def update(self, resource_id, resource):
-        pass
+        """
+        Update a resource in the database.
+
+        :param resource_id: The ID of the resource to update.
+        :param resource: The resource object with updated data.
+        :return: The updated resource.
+        """
+        table = resource.TABLE
+        data = resource.to_dict()
+        query = table.update().where(table.c.id == int(resource_id)).values(**data)
+
+        with self.engine.connect() as conn:
+            result = conn.execute(query)
+            conn.commit()
+            if result.rowcount == 0:
+                raise ValueError(f"Resource with ID {resource_id} does not exist.")
+        return resource
 
     def delete(self, resource_id, resource_class):
         table = resource_class.TABLE
