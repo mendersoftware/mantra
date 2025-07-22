@@ -137,10 +137,10 @@ const tableColumnDefinitions = {
       headerName: 'False Positive',
       renderCell: params => (
         <Checkbox
-          checked={params.row.false_positive}
+          checked={params.row.tags.false_positive}
           onChange={() => {
             const resultId = params.row.id;
-            const method = params.row.false_positive ? 'DELETE' : 'POST';
+            const method = params.row.tags.false_positive ? 'DELETE' : 'POST';
             fetch(`/api/results/${resultId}/false-positive`, { method }).then(() => window.location.reload());
           }}
         />

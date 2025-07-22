@@ -51,8 +51,9 @@ class Result(BaseModel):
         self.timestamp = int(timestamp or time.time())
         self.result = truncate(result, self.TABLE.c.result.type.length)
         self.result_message = result_message
-        self.tags = tags or {}
-        self.false_positive = false_positive
+        self.tags = dict(tags or {})
+        if false_positive:
+            self.tags["false_positive"] = True
 
     @classmethod
     def from_junit_xml_test_case(cls, case, project_id, build_id):
@@ -284,7 +285,7 @@ class Result(BaseModel):
 
         results_table = cls.TABLE
         ands = [
-            results_table.c.false_positive == False,
+            cast(results_table.c.tags['false_positive'].astext, Boolean) == False,
             Build.TABLE.c.name.like(f"{type}%"),
             results_table.c.timestamp > since_time,
         ]
@@ -304,7 +305,7 @@ class Result(BaseModel):
                 results_table.c.test_name,
                 func.count(results_table.c.result).label("count"),
                 results_table.c.project_id,
-                results_table.c.false_positive,
+                results_table.c.tags,
             )
             .select_from(results_table.join(Build.TABLE))
             .where(
@@ -318,7 +319,7 @@ class Result(BaseModel):
             .group_by(
                 results_table.c.test_name,
                 results_table.c.project_id,
-                results_table.c.false_positive,
+                results_table.c.tags["false_positive"].astext,
             )
             .order_by(func.count(results_table.c.result).desc())
         )
