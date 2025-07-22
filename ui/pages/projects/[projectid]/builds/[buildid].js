@@ -43,7 +43,17 @@ const ResultsView = () => {
 
   const canPageForward = offset + OFFSET_DELTA < metadata['total_results'];
   const canPageBackward = offset - OFFSET_DELTA >= 0;
-
+  const tableSlots = {
+    results: {
+      false_positive: {
+        onChange: params => {
+          const resultId = params.row.id;
+          const method = params.row.tags.false_positive ? 'DELETE' : 'POST';
+          fetch(`/api/results/${resultId}/false-positive`, { method }).then(() => getResults(offset));
+        }
+      }
+    }
+  };
   return (
     <>
       <Typography variant="h4">Results</Typography>
@@ -60,7 +70,7 @@ const ResultsView = () => {
           </Button>
         </Stack>
       </Stack>
-      <ResourceTable resources={results} type="results" />
+      <ResourceTable resources={results} tableSlots={tableSlots} type="results" />
     </>
   );
 };

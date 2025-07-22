@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { DataGrid } from '@mui/x-data-grid';
 
@@ -135,16 +135,7 @@ const tableColumnDefinitions = {
     {
       field: 'false_positive',
       headerName: 'False Positive',
-      renderCell: params => (
-        <Checkbox
-          checked={params.row.tags.false_positive}
-          onChange={() => {
-            const resultId = params.row.id;
-            const method = params.row.tags.false_positive ? 'DELETE' : 'POST';
-            fetch(`/api/results/${resultId}/false-positive`, { method }).then(() => window.location.reload());
-          }}
-        />
-      ),
+      renderCell: slotProps => params => <Checkbox checked={params.row.tags.false_positive} onChange={() => slotProps.onChange(params)} />,
       sortable: false
     },
     {
@@ -160,9 +151,21 @@ const tableColumnDefinitions = {
   ]
 };
 
-const ResourceTable = ({ resources, type }) => {
+const ResourceTable = ({ resources, type, tableSlots }) => {
   const rows = resources;
   const columns = tableColumnDefinitions[type];
+
+  const activeColumns = useMemo(
+    () =>
+      columns.map(column => {
+        const slotProps = tableSlots?.[type]?.[column.field];
+        if (!(slotProps && column.renderCell)) {
+          return column;
+        }
+        return { ...column, renderCell: column.renderCell(slotProps) };
+      }),
+    [columns, tableSlots, type]
+  );
 
   let initialState = {};
   if (type == 'results') {
@@ -184,7 +187,7 @@ const ResourceTable = ({ resources, type }) => {
         showQuickFilter
         initialState={initialState}
         rows={rows}
-        columns={columns}
+        columns={activeColumns}
         pageSize={10}
         pageSizeOptions={[10]}
         disableRowSelectionOnClick
