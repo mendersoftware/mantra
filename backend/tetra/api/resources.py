@@ -192,13 +192,13 @@ class FalsePositiveResource(Resource):
     def on_post(self, req, resp, result_id, **kwargs):
         resp.status = falcon.HTTP_200
         result = self.RESOURCE_CLASS.get(resource_id=result_id)
-        result.false_positive = True
+        result.tags['false_positive'] = True
         updated = self.RESOURCE_CLASS.update(resource=result)
         resp.text = json.dumps(updated.to_dict())
 
     def on_delete(self, req, resp, result_id, **kwargs):
         resp.status = falcon.HTTP_200
         result = self.RESOURCE_CLASS.get(resource_id=result_id)
-        result.false_positive = False
+        result.tags['false_positive'] = False
         updated = self.RESOURCE_CLASS.update(resource=result)
         resp.text = json.dumps(updated.to_dict())
