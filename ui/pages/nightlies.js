@@ -70,6 +70,16 @@ export const pipelines = [
     name: 'mender-server',
     url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-server')}`,
     pipelineScheduleId: 2738796
+  },
+  {
+    name: 'mender-gateway:master',
+    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-gateway')}`,
+    pipelineScheduleId: 2874910
+  },
+  {
+    name: 'mender-gateway:2.0.x',
+    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-gateway')}`,
+    pipelineScheduleId: 2874911
   }
 ];
 export const order = pipelines.map(pipeline => pipeline.name);
