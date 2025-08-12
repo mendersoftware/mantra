@@ -100,7 +100,7 @@ const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', cove
   </Stack>
 );
 
-const BuildStatus = ({ componentsByArea, latestNightly, ltsReleases, untracked, versions }) => {
+const BuildStatus = ({ componentsByArea, latestNightly, supported, untracked }) => {
   const { total, ...components } = componentsByArea;
   return (
     <>
@@ -141,24 +141,19 @@ const BuildStatus = ({ componentsByArea, latestNightly, ltsReleases, untracked, 
         </Accordion>
       ))}
 
-      {Object.entries(versions).map(([version, repos], index) => {
-        const isLtsRelease = ltsReleases.includes(version);
-        return (
-          <Accordion key={version} defaultExpanded={index === 0 || isLtsRelease} disableGutters>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />} id={`${version}-header`}>
-              <Stack direction="row" alignItems="center" spacing={2}>
-                <Typography variant="h6">Mender {version}</Typography>
-                {isLtsRelease && <Typography variant="button">LTS</Typography>}
-              </Stack>
-            </AccordionSummary>
-            <AccordionDetails>
-              {repos.map(({ name, version }) => (
-                <RepoStatusItem key={name} repo={name} branch={version} />
-              ))}
-            </AccordionDetails>
-          </Accordion>
-        );
-      })}
+      <Accordion defaultExpanded disableGutters>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} id="supported-components">
+          <Typography variant="h6">Supported Component Versions</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          {supported.repos.reduce((accu, { repo, supportedBranches = [], coverage, organization }) => {
+            supportedBranches.forEach(branch =>
+              accu.push(<RepoStatusItem key={`${repo}-${branch}`} repo={repo} branch={branch} coverage={coverage} organization={organization} />)
+            );
+            return accu;
+          }, [])}
+        </AccordionDetails>
+      </Accordion>
       <Accordion disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} id="untracked-header">
           <Typography variant="h6">Other repos</Typography>
@@ -176,7 +171,8 @@ const BuildStatus = ({ componentsByArea, latestNightly, ltsReleases, untracked, 
 const areaTargetsMap = [
   { name: 'staging', target: 'staging' },
   { name: 'isExecutable', target: 'executable' },
-  { name: 'isProduct', target: 'product' }
+  { name: 'isProduct', target: 'product' },
+  { name: 'supportedBranches', target: 'supported' }
 ];
 
 const transformReposIntoAreas = withDependabot =>
@@ -188,8 +184,8 @@ const transformReposIntoAreas = withDependabot =>
       const { dependabotPendings = 0 } = withDependabot.find(({ name }) => name === item.repo) ?? {};
       accu[item.area].repos.push({ ...item, dependabotPendings });
       accu = areaTargetsMap.reduce((result, area) => {
-        if (item[area.name] || item[area]) {
-          (result[area.target] || result[area]).repos.push({ ...item, dependabotPendings });
+        if (item[area.name]) {
+          result[area.target].repos.push({ ...item, dependabotPendings });
         }
         return result;
       }, accu);
@@ -197,38 +193,6 @@ const transformReposIntoAreas = withDependabot =>
     },
     { ...areas, ...areaTargetsMap.reduce((result, area) => ({ ...result, [area.target]: { repos: [] } }), {}) }
   );
-
-const extractReleaseInfo = releaseInfo =>
-  Object.values(releaseInfo).reduce(
-    (result, release) => {
-      let minorVersion = {
-        ...result,
-        firstReleaseDate: !result.firstReleaseDate || release.release_date < result.releaseDate ? release.release_date : result.firstReleaseDate
-      };
-      if (release.repos && release.release_date > minorVersion.releaseDate) {
-        minorVersion = { ...minorVersion, releaseDate: release.release_date, repos: release.repos };
-      }
-      return minorVersion;
-    },
-    { firstReleaseDate: '', releaseDate: '', repos: [] }
-  );
-
-const findRepoInRepoInfo = (repos, repoName) => repos.find(repoInfo => repoName === repoInfo.repo);
-
-const collectStagingInfo = (result, repos, clientRepos, stagingRepos, executableRepos) => {
-  if (result) {
-    return result;
-  }
-  return repos.reduce((accu, repo) => {
-    const repoInfo = findRepoInRepoInfo(stagingRepos, repo.name);
-    if (!repoInfo) {
-      return accu;
-    }
-    const shouldShowVersion = findRepoInRepoInfo(clientRepos, repo.name) || findRepoInRepoInfo(executableRepos, repo.name);
-    accu.push({ ...repoInfo, ...repo, version: shouldShowVersion ? repo.version : 'staging' });
-    return accu;
-  }, []);
-};
 
 const badgeUrl = 'badges/coveralls_';
 const retrieveCoverageInfo = async repoInfo => {
@@ -334,21 +298,9 @@ const getGithubOrganizationState = async () => {
 export async function getStaticProps() {
   const cutoffDate = new Date();
   cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
-  const aYearAgo = cutoffDate.toISOString().split('T')[0];
-  const versionsInfo = await fetch('https://docs.mender.io/releases/versions.json');
-  const versions = await versionsInfo.json();
   const { untracked, withDependabot } = await getGithubOrganizationState();
   const reposByArea = transformReposIntoAreas(withDependabot);
-  const { client, executable, staging, ...remainder } = reposByArea;
-  const shownVersions = Object.entries(versions.releases).reduce((accu, [version, releaseInfo]) => {
-    const { firstReleaseDate, repos } = extractReleaseInfo(releaseInfo);
-    if (firstReleaseDate < aYearAgo && !versions.lts.includes(version)) {
-      return accu;
-    }
-    accu.staging = collectStagingInfo(accu.staging, repos, client.repos, staging.repos, executable.repos);
-    accu[version] = repos.map(repo => ({ ...repo, version: `${repo.version.substring(0, repo.version.lastIndexOf('.'))}.x` }));
-    return accu;
-  }, {});
+  const { client, executable, staging, supported, ...remainder } = reposByArea;
 
   const latestNightlies = await getLatestNightlies(
     new Date(),
@@ -361,9 +313,8 @@ export async function getStaticProps() {
     props: {
       componentsByArea,
       latestNightly: latestNightlies.length ? latestNightlies[0] : {},
-      ltsReleases: versions.lts,
-      untracked,
-      versions: shownVersions
+      supported,
+      untracked
     }
   };
 }
