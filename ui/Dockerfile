@@ -1,5 +1,5 @@
 
-FROM node:24.4-alpine AS builder
+FROM node:24.7-alpine AS builder
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY 
 ARG GITLAB_TOKEN
