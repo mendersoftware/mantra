@@ -38,7 +38,7 @@ test:backend-unit:
   stage: test
   needs: []
   services:
-    - name: bitnami/postgresql:12.2.0
+    - name: postgres:12.22-bullseye
       alias: db
   variables:
     POSTGRES_PASSWORD: password
