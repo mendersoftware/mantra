@@ -13,7 +13,7 @@ services:
       db:
         condition: service_healthy
   db:
-    image: bitnami/postgresql:12.2.0
+    image: postgres:12.22-bullseye
     container_name: mantra-db
     ports:
       # note: exposing port 5432 here causes issues in travis builds
