@@ -84,6 +84,34 @@ export const pipelines = [
 ];
 export const order = pipelines.map(pipeline => pipeline.name);
 
+const getJobRetryInfo = async (pipeline, pipelineId) => {
+  try {
+    const response = await fetch(`${pipeline.url}/pipelines/${pipelineId}/jobs?include_retried=true&per_page=100`, gitlabApiRequestHeaders);
+    if (!response.ok) {
+      return { hasRetries: false, retriedJobCount: 0 };
+    }
+    const jobs = await response.json();
+
+    // Group jobs by name to detect retries
+    const jobsByName = jobs.reduce((acc, job) => {
+      if (!acc[job.name]) acc[job.name] = [];
+      acc[job.name].push(job);
+      return acc;
+    }, {});
+
+    // Count how many jobs were retried
+    const retriedJobCount = Object.values(jobsByName).filter(jobGroup => jobGroup.length > 1).length;
+
+    return {
+      hasRetries: retriedJobCount > 0,
+      retriedJobCount
+    };
+  } catch (error) {
+    console.error(`Failed to fetch job retry info for pipeline ${pipelineId}:`, error);
+    return { hasRetries: false, retriedJobCount: 0 };
+  }
+};
+
 const getNightlies = async (accu, options = {}, pipeline) => {
   if (!process.env.GITLAB_TOKEN) {
     return [];
@@ -114,18 +142,21 @@ export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
 
   // Now get the test report summary of each pipeline and construct the final objects to return
   return Promise.all(
-    pipelines.map(obj =>
-      fetch(`${pipeline.url}/pipelines/${obj.id}/test_report_summary`, gitlabApiRequestHeaders)
-        .then(res => res.json())
-        .then(data => {
-          return {
-            path: obj.web_url.replace(/^https:\/\/gitlab.com/, ''),
-            status: obj.status.toUpperCase(),
-            startedAt: obj.created_at,
-            testReportSummary: { total: data.total }
-          };
-        })
-    )
+    pipelines.map(async obj => {
+      const [testReportData, retryInfo] = await Promise.all([
+        fetch(`${pipeline.url}/pipelines/${obj.id}/test_report_summary`, gitlabApiRequestHeaders).then(res => res.json()),
+        getJobRetryInfo(pipeline, obj.id)
+      ]);
+
+      return {
+        path: obj.web_url.replace(/^https:\/\/gitlab.com/, ''),
+        status: obj.status.toUpperCase(),
+        startedAt: obj.created_at,
+        testReportSummary: { total: testReportData.total },
+        hasRetries: retryInfo.hasRetries,
+        retriedJobCount: retryInfo.retriedJobCount
+      };
+    })
   );
 };
 const limit = 150;

@@ -1,12 +1,12 @@
 import React from 'react';
 import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import { Circle } from '@mui/icons-material';
+import { Circle, Replay } from '@mui/icons-material';
 import { buildStatusColor } from '../constants';
 
 export const Dot = props => {
   const { item } = props;
   return (
-    <Stack key={item.path} alignItems="center">
+    <Stack key={item.path} alignItems="center" sx={{ position: 'relative' }}>
       <Tooltip
         arrow
         title={
@@ -19,12 +19,29 @@ export const Dot = props => {
                 <div>{Math.ceil(value)}</div>
               </Stack>
             ))}
+            {item.hasRetries && (
+              <Stack direction="row" justifyContent="space-between">
+                <b>Jobs retried</b>
+                <div>{item.retriedJobCount}</div>
+              </Stack>
+            )}
           </>
         }
       >
         <a href={`https://gitlab.com${item.path}`} target="_blank">
           <IconButton color={buildStatusColor(item.status)} edge="start" size="small">
             <Circle color={buildStatusColor(item.status)} />
+            {item.hasRetries && (
+              <Replay
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  fontSize: '0.75rem',
+                  color: 'action.active'
+                }}
+              />
+            )}
           </IconButton>
         </a>
       </Tooltip>
