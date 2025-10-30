@@ -127,9 +127,9 @@ test:composition:
     - pip3 install --ignore-installed tox
     - echo $'[api]\nbase_url = http://test:test@docker/api' > backend/tetra-test.conf
   script:
-    - docker-compose -f docker-compose.yml -f docker-compose.test.yml up -d db
+    - docker compose -f docker-compose.yml -f docker-compose.test.yml up -d db
     - sleep 10
-    - docker-compose -f docker-compose.yml -f docker-compose.test.yml up --no-recreate -d
+    - docker compose -f docker-compose.yml -f docker-compose.test.yml up --no-recreate -d
     - cd backend
     - TOXENV=functional tox
 

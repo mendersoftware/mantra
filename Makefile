@@ -40,24 +40,24 @@ deploy-docs:
 	mkdocs gh-deploy -c
 
 docker-build:
-	docker-compose -f docker-compose.yml build
+	docker compose -f docker-compose.yml build
 
 docker-deploy: docker-db
 	sleep 5
-	docker-compose -f docker-compose.yml up --no-recreate -d api ui gateway
+	docker compose -f docker-compose.yml up --no-recreate -d api ui gateway
 
 docker-deploy-development: docker-db
 	sleep 5
-	docker-compose -f docker-compose.yml -f development.yml up --no-recreate -d api ui gateway
+	docker compose -f docker-compose.yml -f development.yml up --no-recreate -d api ui gateway
 
 docker-db:
-	docker-compose -f docker-compose.yml up -d db
+	docker compose -f docker-compose.yml up -d db
 
 docker-logs:
-	docker-compose -f docker-compose.yml logs -f
+	docker compose -f docker-compose.yml logs -f
 
 docker-down:
-	docker-compose -f docker-compose.yml down
+	docker compose -f docker-compose.yml down
 
 docker-port:
 	@echo API=$(shell docker port $(DOCKER_TAG) 7374)
