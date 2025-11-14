@@ -216,7 +216,7 @@ export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
     })
   );
 };
-const limit = 150;
+const limit = 50;
 
 const getNightliesByPipeline = async pipeline => {
   const today = new Date();
