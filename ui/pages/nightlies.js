@@ -7,6 +7,7 @@ import { PipelineCalendar } from '../src/nightlies/CalendarView';
 import { PipelineListView } from '../src/nightlies/ListView';
 import dayjs from 'dayjs';
 import { Legend } from '../src/nightlies/Legend';
+import { request, gql } from 'graphql-request';
 
 const Nightlies = props => {
   const [calendarView, setCalendarView] = useState(true);
@@ -44,72 +45,128 @@ const Nightlies = props => {
 };
 
 const gitlabApiRequestHeaders = { headers: { Authorization: `Bearer ${process.env.GITLAB_TOKEN}` } };
+const gitlabProjectPipelineBaseUrl = 'https://gitlab.com/api/v4/projects/';
+const gitlabGraphqlUrl = 'https://gitlab.com/api/graphql';
 const gitlabPaginationLimit = 100;
+
+// GraphQL query to fetch test report summary and jobs for a single pipeline
+const pipelineEnrichmentQuery = gql`
+  query getPipelineDetails($projectPath: ID!, $iid: ID!) {
+    project(fullPath: $projectPath) {
+      pipeline(iid: $iid) {
+        testReportSummary {
+          total {
+            count
+            error
+            failed
+            skipped
+            success
+          }
+        }
+        jobs {
+          nodes {
+            name
+            status
+            retried
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const pipelines = [
   {
     name: 'Integration mender-server:main',
-    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/integration')}`,
+    projectPath: 'Northern.tech/Mender/integration',
     pipelineScheduleId: 2676039
   },
   {
     name: 'Integration mender-server:4.0.x',
-    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/integration')}`,
+    projectPath: 'Northern.tech/Mender/integration',
     pipelineScheduleId: 2766723
   },
   {
     name: 'Mender Client Acceptance Tests',
-    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-qa')}`,
+    projectPath: 'Northern.tech/Mender/mender-qa',
     pipelineScheduleId: 30585
   },
   {
     name: 'mender-server-enterprise',
-    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-server-enterprise')}`,
+    projectPath: 'Northern.tech/Mender/mender-server-enterprise',
     pipelineScheduleId: 2738797
   },
   {
     name: 'mender-server',
-    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-server')}`,
+    projectPath: 'Northern.tech/Mender/mender-server',
     pipelineScheduleId: 2738796
   },
   {
     name: 'mender-gateway:master',
-    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-gateway')}`,
+    projectPath: 'Northern.tech/Mender/mender-gateway',
     pipelineScheduleId: 2874910
   },
   {
     name: 'mender-gateway:2.0.x',
-    url: `https://gitlab.com/api/v4/projects/${encodeURIComponent('Northern.tech/Mender/mender-gateway')}`,
+    projectPath: 'Northern.tech/Mender/mender-gateway',
     pipelineScheduleId: 2874911
   }
 ];
 export const order = pipelines.map(pipeline => pipeline.name);
 
-const getJobRetryInfo = async (pipeline, pipelineId) => {
-  try {
-    const response = await fetch(`${pipeline.url}/pipelines/${pipelineId}/jobs?include_retried=true&per_page=100`, gitlabApiRequestHeaders);
-    if (!response.ok) {
-      return { hasRetries: false, retriedJobCount: 0 };
-    }
-    const jobs = await response.json();
-
-    // Group jobs by name to detect retries
-    const jobsByName = jobs.reduce((acc, job) => {
-      if (!acc[job.name]) acc[job.name] = [];
-      acc[job.name].push(job);
-      return acc;
-    }, {});
-
-    // Count how many jobs were retried
-    const retriedJobCount = Object.values(jobsByName).filter(jobGroup => jobGroup.length > 1).length;
-
-    return {
-      hasRetries: retriedJobCount > 0,
-      retriedJobCount
-    };
-  } catch (error) {
-    console.error(`Failed to fetch job retry info for pipeline ${pipelineId}:`, error);
+const calculateRetryInfo = jobs => {
+  if (!jobs || jobs.length === 0) {
     return { hasRetries: false, retriedJobCount: 0 };
   }
+
+  // Group jobs by name to detect retries
+  const jobsByName = jobs.reduce((acc, job) => {
+    if (!acc[job.name]) acc[job.name] = [];
+    acc[job.name].push(job);
+    return acc;
+  }, {});
+
+  // Count how many jobs were retried
+  const retriedJobCount = Object.values(jobsByName).filter(jobGroup => jobGroup.length > 1).length;
+
+  return {
+    hasRetries: retriedJobCount > 0,
+    retriedJobCount
+  };
+};
+
+const emptyDetails = {
+  testReportSummary: { total: { failed: 0 } },
+  hasRetries: false,
+  retriedJobCount: 0
+};
+const getPipelineDetails = async (pipeline, pipelineIid) => {
+  let pipelineData;
+  try {
+    const data = await request({
+      url: gitlabGraphqlUrl,
+      document: pipelineEnrichmentQuery,
+      variables: {
+        projectPath: pipeline.projectPath,
+        iid: String(pipelineIid)
+      },
+      requestHeaders: gitlabApiRequestHeaders.headers
+    });
+    pipelineData = data?.project?.pipeline;
+  } catch (error) {
+    console.error(`(${pipeline.name}): GraphQL query failed for pipeline ${pipelineIid}:`, error);
+    return emptyDetails;
+  }
+  if (!pipelineData) {
+    console.warn(`Failed to fetch details for pipeline ${pipelineIid}`);
+    return emptyDetails;
+  }
+  const retryInfo = calculateRetryInfo(pipelineData.jobs?.nodes || []);
+  return {
+    testReportSummary: pipelineData.testReportSummary || {},
+    hasRetries: retryInfo.hasRetries,
+    retriedJobCount: retryInfo.retriedJobCount
+  };
 };
 
 const getNightlies = async (accu, options = {}, pipeline) => {
@@ -117,10 +174,10 @@ const getNightlies = async (accu, options = {}, pipeline) => {
     return [];
   }
   const { page, limit, cutoffDate, totalPages } = options;
-  const response = await fetch(
-    `${pipeline.url}/pipeline_schedules/${pipeline.pipelineScheduleId}/pipelines?sort=desc&per_page=${gitlabPaginationLimit}&page=${page}`,
-    gitlabApiRequestHeaders
+  const url = [gitlabProjectPipelineBaseUrl, encodeURIComponent(pipeline.projectPath), 'pipeline_schedules', pipeline.pipelineScheduleId, 'pipelines'].join(
+    '/'
   );
+  const response = await fetch(`${url}?sort=desc&per_page=${gitlabPaginationLimit}&page=${page}`, gitlabApiRequestHeaders);
   const result = await response.json();
   console.log(`(${pipeline.name}): gotten ${result.length} pipelines of ${limit}`);
   const pipelinesFiltered = result.filter(obj => new Date(obj.created_at).setHours(0, 0, 0, 0) >= cutoffDate);
@@ -135,7 +192,10 @@ export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
   cutoffDate.setHours(0, 0, 0, 0);
   // Ideally, we would order by started date (desc) GitLab API does not support this, so the workaround is to paginate
   // until we collect pipelines, filter by `cutoffDate` and recurse backwards until we have reached `limit` filtered nightlies
-  const canaryResponse = await fetch(`${pipeline.url}/pipeline_schedules/${pipeline.pipelineScheduleId}/pipelines?per_page=1`, gitlabApiRequestHeaders);
+  const canaryResponse = await fetch(
+    `${gitlabProjectPipelineBaseUrl}/${encodeURIComponent(pipeline.projectPath)}/pipeline_schedules/${pipeline.pipelineScheduleId}/pipelines?per_page=1`,
+    gitlabApiRequestHeaders
+  );
   const totalPipelines = await canaryResponse.headers.get('x-total');
   console.log(`(${pipeline.name}): will at most go through ${totalPipelines} pipelines`);
   const pipelines = await getNightlies([], { cutoffDate, limit, page: 1, totalPages: Math.ceil(totalPipelines / gitlabPaginationLimit) }, pipeline);
@@ -143,18 +203,15 @@ export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
   // Now get the test report summary of each pipeline and construct the final objects to return
   return Promise.all(
     pipelines.map(async obj => {
-      const [testReportData, retryInfo] = await Promise.all([
-        fetch(`${pipeline.url}/pipelines/${obj.id}/test_report_summary`, gitlabApiRequestHeaders).then(res => res.json()),
-        getJobRetryInfo(pipeline, obj.id)
-      ]);
+      const details = await getPipelineDetails(pipeline, obj.iid);
 
       return {
         path: obj.web_url.replace(/^https:\/\/gitlab.com/, ''),
         status: obj.status.toUpperCase(),
         startedAt: obj.created_at,
-        testReportSummary: { total: testReportData.total },
-        hasRetries: retryInfo.hasRetries,
-        retriedJobCount: retryInfo.retriedJobCount
+        testReportSummary: details.testReportSummary,
+        hasRetries: details.hasRetries,
+        retriedJobCount: details.retriedJobCount
       };
     })
   );
