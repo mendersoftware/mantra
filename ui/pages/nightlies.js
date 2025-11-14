@@ -133,10 +133,7 @@ export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
   cutoffDate.setHours(0, 0, 0, 0);
   // Ideally, we would order by started date (desc) GitLab API does not support this, so the workaround is to paginate
   // until we collect pipelines, filter by `cutoffDate` and recurse backwards until we have reached `limit` filtered nightlies
-  const canaryResponse = await fetch(
-    `${pipeline.url}/pipeline_schedules/${pipeline.pipelineScheduleId}/pipelines?per_page=${gitlabPaginationLimit}`,
-    gitlabApiRequestHeaders
-  );
+  const canaryResponse = await fetch(`${pipeline.url}/pipeline_schedules/${pipeline.pipelineScheduleId}/pipelines?per_page=1`, gitlabApiRequestHeaders);
   const totalPages = await canaryResponse.headers.get('x-total-pages');
   const pipelines = await getNightlies([], { cutoffDate, limit, page: totalPages }, pipeline);
 
