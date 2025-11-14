@@ -1,18 +1,18 @@
 
 FROM node:25.1-alpine AS builder
-ARG AWS_ACCESS_KEY_ID
-ARG AWS_SECRET_ACCESS_KEY 
-ARG GITLAB_TOKEN
-ARG GITHUB_TOKEN
-ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-ENV GITLAB_TOKEN=$GITLAB_TOKEN
-ENV GITHUB_TOKEN=$GITHUB_TOKEN
 WORKDIR /work
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . ./
-RUN npm run build
+RUN --mount=type=secret,id=aws_access_key_id \
+    --mount=type=secret,id=aws_secret_access_key \
+    --mount=type=secret,id=gitlab_token \
+    --mount=type=secret,id=github_token \
+    export AWS_ACCESS_KEY_ID=$(cat /run/secrets/aws_access_key_id 2>/dev/null || echo "") && \
+    export AWS_SECRET_ACCESS_KEY=$(cat /run/secrets/aws_secret_access_key 2>/dev/null || echo "") && \
+    export GITLAB_TOKEN=$(cat /run/secrets/gitlab_token 2>/dev/null || echo "") && \
+    export GITHUB_TOKEN=$(cat /run/secrets/github_token 2>/dev/null || echo "") && \
+    npm run build
 
 FROM builder AS development
 EXPOSE 80

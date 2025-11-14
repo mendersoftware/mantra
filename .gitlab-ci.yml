@@ -86,10 +86,10 @@ build:docker:ui:
   script:
     - echo "building ${CI_PROJECT_NAME} for ${DOCKER_BUILD_SERVICE_IMAGE}"
     - docker build
-      --build-arg AWS_ACCESS_KEY_ID
-      --build-arg AWS_SECRET_ACCESS_KEY
-      --build-arg GITLAB_TOKEN
-      --build-arg GITHUB_TOKEN=$GITHUB_BOT_TOKEN_REPO_FULL
+      --secret id=aws_access_key_id,env=AWS_ACCESS_KEY_ID
+      --secret id=aws_secret_access_key,env=AWS_SECRET_ACCESS_KEY
+      --secret id=gitlab_token,env=GITLAB_TOKEN
+      --secret id=github_token,env=GITHUB_BOT_TOKEN_REPO_FULL
       --tag $DOCKER_BUILD_SERVICE_IMAGE
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
       ${DOCKER_DIR:-.}
