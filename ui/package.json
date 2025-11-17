@@ -24,6 +24,8 @@
     "react-big-calendar": "1.19.4"
   },
   "devDependencies": {
+    "@northern.tech/eslint-config": "0.6.2",
+    "@northern.tech/prettier-config": "0.2.1",
     "eslint": "9.39.1",
     "eslint-config-next": "16.0.6",
     "eslint-plugin-prettier": "^5.5.4",
