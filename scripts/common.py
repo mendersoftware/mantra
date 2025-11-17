@@ -74,6 +74,12 @@ MENDER_QA_TEST_SUITES = [
         "job": "test:integration:source_client:enterprise",
         "results_file": "results_full_integration",
     },
+    {
+        "id": 12,
+        "name": "test:orchestrator-integration",
+        "job": "test:orchestrator-integration",
+        "results_file": "results_orchestrator_integration",
+    },
 ]
 
 _TETRA_API_HOST = os.getenv("TETRA_API_HOST", "http://localhost")
