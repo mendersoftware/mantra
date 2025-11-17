@@ -1,8 +1,10 @@
 import React from 'react';
-import { Grid, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+
 import { Circle } from '@mui/icons-material';
-import { buildStatusColor } from '../constants';
+import { Grid, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
+
+import { buildStatusColor } from '../constants';
 
 const useStyles = makeStyles()(theme => ({
   builds: {
@@ -44,7 +46,7 @@ export const PipelineListView = props => {
                           </>
                         }
                       >
-                        <a href={`https://gitlab.com${item.path}`} target="_blank">
+                        <a href={`https://gitlab.com${item.path}`} target="_blank" rel="noreferrer">
                           <IconButton color={buildStatusColor(item.status)} edge="start" size="small">
                             <Circle color={buildStatusColor(item.status)} />
                           </IconButton>

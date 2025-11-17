@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+
+import { DarkMode as DarkModeIcon, LightMode as LightModeIcon } from '@mui/icons-material';
+import { AppBar, IconButton, Stack, Tab, Tabs, Toolbar, Typography } from '@mui/material';
 
 import { useRouter } from 'next/router';
 
-import { AppBar, IconButton, Stack, Tab, Tabs, Toolbar, Typography } from '@mui/material';
-import { DarkMode as DarkModeIcon, LightMode as LightModeIcon } from '@mui/icons-material';
-
-import Link from './link';
 import { paths } from '../pages';
+import Link from './link';
 
 export const Navbar = () => {
   const [mode, setMode] = useState('light');

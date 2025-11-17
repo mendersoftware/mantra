@@ -1,11 +1,11 @@
-import fs from 'fs/promises';
-import path from 'path';
-import { GetObjectCommand, ListObjectsCommand, S3Client } from '@aws-sdk/client-s3';
-
-import React, { memo, useRef, useState } from 'react';
+import { memo, useRef, useState } from 'react';
 
 import { Box, FormControlLabel, Paper, Popper, Switch, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
+
+import { GetObjectCommand, ListObjectsCommand, S3Client } from '@aws-sdk/client-s3';
+import fs from 'fs/promises';
+import path from 'path';
 
 import Link from '../components/link';
 
@@ -57,7 +57,7 @@ const GridCellExpand = memo(function GridCellExpand({ width, value }) {
       </Box>
       {showPopper && (
         <Popper open={showFullCell && anchorEl !== null} anchorEl={anchorEl} style={{ maxWidth: 400, width: 'fit-content' }}>
-          <Paper elevation={1} style={{ minHeight: wrapper.current.offsetHeight - 3 }}>
+          <Paper elevation={1} style={{ minHeight: anchorEl.offsetHeight }}>
             <Typography variant="body2" style={{ padding: 8 }}>
               {value}
             </Typography>

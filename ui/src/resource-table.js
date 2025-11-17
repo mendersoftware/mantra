@@ -1,8 +1,7 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
+import { Box, Checkbox, Typography } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-
-import { Box, Typography, Checkbox } from '@mui/material';
 
 import Link from '../components/link';
 
@@ -56,9 +55,7 @@ const tableColumnDefinitions = {
     {
       field: 'status',
       headerName: 'Result',
-      renderCell: params => {
-        return <ResultCell result={params.row.status} />;
-      }
+      renderCell: params => <ResultCell result={params.row.status} />
     }
   ],
   results: [
@@ -82,9 +79,7 @@ const tableColumnDefinitions = {
       field: 'result',
       headerName: 'Result',
       minWidth: 110,
-      renderCell: params => {
-        return <ResultCell result={params.row.result} />;
-      },
+      renderCell: params => <ResultCell result={params.row.result} />,
       sortable: true
     },
     {

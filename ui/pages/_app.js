@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import Head from 'next/head';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { CacheProvider } from '@emotion/react';
+import { useEffect, useState } from 'react';
 
-import { dark as darkTheme, light as lightTheme } from '../src/themes/Mender';
-import createEmotionCache from '../src/createEmotionCache';
+import { CacheProvider } from '@emotion/react';
+import CssBaseline from '@mui/material/CssBaseline';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+import Head from 'next/head';
+
 import Layout from '../components/layout';
+import createEmotionCache from '../src/createEmotionCache';
+import { dark as darkTheme, light as lightTheme } from '../src/themes/Mender';
 
 // Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createEmotionCache();

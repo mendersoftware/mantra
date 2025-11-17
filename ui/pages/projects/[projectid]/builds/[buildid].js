@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
+import { ArrowBackIosNew as ArrowBackIcon, ArrowForwardIos as ArrowForwardIcon } from '@mui/icons-material';
+import { Button, Stack, Typography } from '@mui/material';
 
 import { useRouter } from 'next/router';
-
-import { Button, Stack, Typography } from '@mui/material';
-import { ArrowBackIosNew as ArrowBackIcon, ArrowForwardIos as ArrowForwardIcon } from '@mui/icons-material';
 
 import ResourceTable from '../../../../src/resource-table';
 import ResultsMetadata from '../../../../src/results-metadata';
