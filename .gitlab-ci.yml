@@ -1,3 +1,17 @@
+variables:
+  DOCKER_HOST:
+    value: "tcp://docker:2376"
+    description: "Required to run dind inside k8s runners with TLS"
+  DOCKER_TLS_CERTDIR:
+    value: "/certs"
+    description: "The cert dir inside the gitlab runner. Don't change this."
+  DOCKER_TLS_VERIFY:
+    value: 1
+    description: "Enable TLS verification for docker in dind"
+  DOCKER_CERT_PATH:
+    value: "$DOCKER_TLS_CERTDIR/client"
+    description: "Used for docker entrypoints. See https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4125"
+
 stages:
   - test
   - build
@@ -15,14 +29,16 @@ include:
   - project: 'Northern.tech/Mender/mendertesting'
     file: '.gitlab-ci-github-status-updates.yml'
 
+default:
+  tags:
+    - k8s
+
 # Disable Mender specific job
 publish:image:mender:
   rules:
     - when: never
 
 test:check-python3-formatting:
-  tags:
-    - mender-qa-worker-generic-light
   stage: test
   needs: []
   image: python:3
@@ -33,8 +49,6 @@ test:check-python3-formatting:
     - TOXENV=black tox
 
 test:backend-unit:
-  tags:
-    - mender-qa-worker-generic-light
   stage: test
   needs: []
   services:
@@ -67,6 +81,8 @@ build:docker:
     - if: $CI_COMMIT_REF_NAME == "master"
     - changes:
         - backend/**/*
+  tags:
+    - k8s
 
 publish:image:
   variables:
@@ -107,8 +123,6 @@ build:docker:ui:
         - ui/**/*
 
 test:composition:
-  tags:
-    - mender-qa-worker-generic-light
   stage: acceptance_tests
   image: tiangolo/docker-with-compose
   needs:
