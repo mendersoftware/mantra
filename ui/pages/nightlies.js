@@ -110,6 +110,11 @@ export const pipelines = [
     name: 'mender-gateway:2.0.x',
     projectPath: 'Northern.tech/Mender/mender-gateway',
     pipelineScheduleId: 2874911
+  },
+  {
+    name: 'mender-orchestrator',
+    projectPath: 'Northern.tech/Mender/mender-orchestrator',
+    pipelineScheduleId: 2758204
   }
 ];
 export const order = pipelines.map(pipeline => pipeline.name);
