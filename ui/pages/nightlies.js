@@ -244,12 +244,16 @@ const getNightliesByPipeline = async pipeline => {
   return [Object.values(items), latestNightlies];
 };
 const mergeByDate = pipelines => {
-  const today = dayjs();
+  const today = dayjs().utc();
   const runsMerged = new Array(limit);
   for (let i = 0; i < limit; i++) {
     const currentDay = today.add(-i, 'day');
     pipelines.forEach(pipeline => {
-      const matchingRun = pipeline.data.find(run => dayjs(run.startedAt).isSame(currentDay, 'day'));
+      const matchingRun = pipeline.data.find(run => {
+        // Shift by 12 hours to align day boundaries at noon instead of midnight
+        const adjustedDate = dayjs(run.startedAt).utc().subtract(12, 'hours');
+        return adjustedDate.isSame(currentDay, 'day');
+      });
       if (!matchingRun) return;
       if (runsMerged[i]) {
         runsMerged[i][pipeline.name] = matchingRun;

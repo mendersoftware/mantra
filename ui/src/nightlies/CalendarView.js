@@ -1,6 +1,8 @@
 import React, { useCallback } from 'react';
 import { Calendar, dayjsLocalizer } from 'react-big-calendar';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
 const localizer = dayjsLocalizer(dayjs);
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Dot } from './Dot';
@@ -56,8 +58,11 @@ export const PipelineCalendar = props => {
       const event = { data: [], title: '', allDay: true };
       Object.keys(pipelines).forEach(key => {
         event.data.push({ ...pipelines[key], name: key });
-        event.start = new Date(pipelines[key].startedAt);
-        event.end = new Date(pipelines[key].startedAt);
+        // Shift by 12 hours to align day boundaries at noon instead of midnight
+        const adjustedDate = dayjs(pipelines[key].startedAt).utc().subtract(12, 'hours');
+        const utcDate = adjustedDate.startOf('day').add(1, 'day').toDate();
+        event.start = utcDate;
+        event.end = utcDate;
         event.id = pipelines[key].startedAt;
       });
       events.push(event);
