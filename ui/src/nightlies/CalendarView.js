@@ -20,7 +20,9 @@ const titleHeight = 39;
 const monthHeaderHeight = 21;
 const height = (rowScale * errorRowHeight + dateHeaderHeight) * weekCount + monthHeaderHeight + titleHeight;
 
-const Event = ({ event }) => {
+const Event = props => {
+  const { event } = props;
+
   return (
     <div style={eventContainerStyles}>
       {event.data.map((run, i) => (
