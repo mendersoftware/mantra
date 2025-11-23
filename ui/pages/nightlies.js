@@ -117,7 +117,6 @@ export const pipelines = [
     pipelineScheduleId: 2758204
   }
 ];
-export const order = pipelines.map(pipeline => pipeline.name);
 
 const calculateRetryInfo = jobs => {
   if (!jobs || jobs.length === 0) {
@@ -268,6 +267,22 @@ const mergeByDate = pipelines => {
   return runsMerged.filter(item => !!item);
 };
 
+const sortByNamesOrder = pipelineRuns => {
+  const pipelineNamesOrder = pipelines.map(pipeline => pipeline.name);
+
+  const sortedRuns = pipelineRuns.map(item => {
+    const sortedItem = {};
+    pipelineNamesOrder.forEach(key => {
+      if (item.hasOwnProperty(key)) {
+        sortedItem[key] = item[key];
+      }
+    });
+    return sortedItem;
+  });
+
+  return sortedRuns;
+};
+
 export async function getStaticProps() {
   const nightlies = {};
   const nightliesArr = [];
@@ -281,7 +296,7 @@ export async function getStaticProps() {
   return {
     props: {
       nightlies,
-      flatNightlies: mergeByDate(nightliesArr)
+      flatNightlies: sortByNamesOrder(mergeByDate(nightliesArr))
     }
   };
 }

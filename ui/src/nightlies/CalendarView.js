@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 const localizer = dayjsLocalizer(dayjs);
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Dot } from './Dot';
-import { order } from '../../pages/nightlies';
 
 const eventContainerStyles = {
   display: 'flex',
@@ -22,13 +21,9 @@ const monthHeaderHeight = 21;
 const height = (rowScale * errorRowHeight + dateHeaderHeight) * weekCount + monthHeaderHeight + titleHeight;
 
 const Event = ({ event }) => {
-  const runs = order.reduce((acc, name) => {
-    const run = event.data.find(pipeLineRun => pipeLineRun.name === name);
-    return run ? [...acc, run] : acc;
-  }, []);
   return (
     <div style={eventContainerStyles}>
-      {runs.map((run, i) => (
+      {event.data.map((run, i) => (
         <div key={run.startedAt}>
           <Dot item={run} index={i} />
         </div>
