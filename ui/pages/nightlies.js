@@ -210,13 +210,20 @@ export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
     pipelines.map(async obj => {
       const details = await getPipelineDetails(pipeline, obj.iid);
 
+      // Shift 12 hours into the future to show schedules from the previous
+      // evening and early morning as the same day. Use a new attribute
+      // shiftedDate to still keep the real startedAt for correctness when
+      // showing the details of each pipeline.
+      const shiftedDate = dayjs(obj.created_at).add(12, 'hours').toISOString();
+
       return {
         path: obj.web_url.replace(/^https:\/\/gitlab.com/, ''),
         status: obj.status.toUpperCase(),
         startedAt: obj.created_at,
         testReportSummary: details.testReportSummary,
         hasRetries: details.hasRetries,
-        retriedJobCount: details.retriedJobCount
+        retriedJobCount: details.retriedJobCount,
+        shiftedDate
       };
     })
   );
@@ -249,7 +256,7 @@ const mergeByDate = pipelines => {
   for (let i = 0; i < limit; i++) {
     const currentDay = today.add(-i, 'day');
     pipelines.forEach(pipeline => {
-      const matchingRun = pipeline.data.find(run => dayjs(run.startedAt).isSame(currentDay, 'day'));
+      const matchingRun = pipeline.data.find(run => dayjs(run.shiftedDate).isSame(currentDay, 'day'));
       if (!matchingRun) return;
       if (runsMerged[i]) {
         runsMerged[i][pipeline.name] = matchingRun;

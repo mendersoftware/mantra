@@ -56,9 +56,9 @@ export const PipelineCalendar = props => {
       const event = { data: [], title: '', allDay: true };
       Object.keys(pipelines).forEach(key => {
         event.data.push({ ...pipelines[key], name: key });
-        event.start = new Date(pipelines[key].startedAt);
-        event.end = new Date(pipelines[key].startedAt);
-        event.id = pipelines[key].startedAt;
+        event.start = new Date(pipelines[key].shiftedDate);
+        event.end = new Date(pipelines[key].shiftedDate);
+        event.id = pipelines[key].shiftedDate;
       });
       events.push(event);
     });
