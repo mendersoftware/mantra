@@ -102,14 +102,19 @@ export const pipelines = [
     pipelineScheduleId: 2738796
   },
   {
-    name: 'mender-gateway:master',
+    name: 'mender-gateway:master (w/ client latest)',
     projectPath: 'Northern.tech/Mender/mender-gateway',
     pipelineScheduleId: 2874910
   },
   {
-    name: 'mender-gateway:2.0.x',
+    name: 'mender-gateway:2.0.x (w/ client latest)',
     projectPath: 'Northern.tech/Mender/mender-gateway',
     pipelineScheduleId: 2874911
+  },
+  {
+    name: 'mender-gateway:master (w/ client master)',
+    projectPath: 'Northern.tech/Mender/mender-gateway',
+    pipelineScheduleId: 4022183
   },
   {
     name: 'mender-orchestrator',
