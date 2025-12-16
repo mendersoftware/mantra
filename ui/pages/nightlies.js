@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
-import { PipelineCalendar } from '../src/nightlies/CalendarView';
-import { PipelineListView } from '../src/nightlies/ListView';
+import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
+
 import dayjs from 'dayjs';
+import { gql, request } from 'graphql-request';
+
+import { PipelineCalendar } from '../src/nightlies/CalendarView';
 import { Legend } from '../src/nightlies/Legend';
-import { request, gql } from 'graphql-request';
+import { PipelineListView } from '../src/nightlies/ListView';
 
 const Nightlies = props => {
   const [calendarView, setCalendarView] = useState(true);

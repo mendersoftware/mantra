@@ -1,9 +1,12 @@
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { Calendar, dayjsLocalizer } from 'react-big-calendar';
-import dayjs from 'dayjs';
-const localizer = dayjsLocalizer(dayjs);
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+import dayjs from 'dayjs';
+
 import { Dot } from './Dot';
+
+const localizer = dayjsLocalizer(dayjs);
 
 const eventContainerStyles = {
   display: 'flex',
@@ -37,16 +40,14 @@ const Event = props => {
 export const PipelineCalendar = props => {
   const { pipelines } = props;
 
-  const eventPropGetter = event => {
-    return {
-      style: {
-        backgroundColor: event.color || 'transparent',
-        color: 'black',
-        border: 'none',
-        padding: '2px'
-      }
-    };
-  };
+  const eventPropGetter = event => ({
+    style: {
+      backgroundColor: event.color || 'transparent',
+      color: 'black',
+      border: 'none',
+      padding: '2px'
+    }
+  });
   const pipelinesToEvents = useCallback(pipelinesArr => {
     const events = [];
     pipelinesArr.forEach(pipelines => {

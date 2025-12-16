@@ -1,6 +1,6 @@
-import React from 'react';
-import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { Circle, Replay } from '@mui/icons-material';
+import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
+
 import { buildStatusColor } from '../constants';
 
 export const Dot = props => {
@@ -28,7 +28,7 @@ export const Dot = props => {
           </>
         }
       >
-        <a href={`https://gitlab.com${item.path}`} target="_blank">
+        <a href={`https://gitlab.com${item.path}`} target="_blank" rel="noreferrer">
           <IconButton color={buildStatusColor(item.status)} edge="start" size="small">
             <Circle color={buildStatusColor(item.status)} />
             {item.hasRetries && (

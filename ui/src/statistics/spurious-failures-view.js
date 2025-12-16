@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-import { Box, TextField, Typography, FormControl, InputLabel, Select, MenuItem, Checkbox, FormControlLabel } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { Box, Checkbox, FormControl, FormControlLabel, InputLabel, MenuItem, Select, TextField, Typography } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
-import { DataGrid } from '@mui/x-data-grid';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import dayjs from 'dayjs';
 
 const minInputDate = dayjs(new Date(2020, 1, 1));
 
-const SpuriousFailuresView = props => {
+const SpuriousFailuresView = () => {
   const [sinceDate, setSinceDate] = useState(dayjs().subtract(7, 'day'));
 
   const [results, setResults] = useState([]);

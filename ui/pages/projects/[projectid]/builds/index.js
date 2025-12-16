@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-
-import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 
 import { Typography } from '@mui/material';
+
+import { useRouter } from 'next/router';
 
 import ResourceTable from '../../../../src/resource-table';
 

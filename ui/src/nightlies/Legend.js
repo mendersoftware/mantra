@@ -1,6 +1,6 @@
 import { Circle, Replay } from '@mui/icons-material';
-import React from 'react';
 import { Box, Typography } from '@mui/material';
+
 const legendItems = [
   { color: 'success', title: 'Success' },
   { color: 'warning', title: 'Running' },
