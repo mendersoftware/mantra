@@ -195,7 +195,7 @@ notify:slack:build-status:
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       when: always
-    - if: $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH != ""
+    - if: $CI_COMMIT_BRANCH != ""
       when: manual
   script:
     - deno run --allow-read --allow-net --allow-env scripts/send-slack-notification.ts
