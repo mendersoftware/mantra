@@ -1,11 +1,9 @@
-import { Circle, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
-import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Typography } from '@mui/material';
+import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from '@mui/material';
 
 import { gql, request } from 'graphql-request';
 
 import Link from '../components/link';
-import { buildStatusColor } from '../src/constants';
-import { getLatestNightlies, pipelines } from './nightlies';
 
 const areas = {
   backend: 'backend',
@@ -104,7 +102,7 @@ const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', cove
   </Stack>
 );
 
-const BuildStatus = ({ componentsByArea, latestNightly, supported, untracked }) => {
+const BuildStatus = ({ componentsByArea, supported, untracked }) => {
   const { total, ...components } = componentsByArea;
   return (
     <>
@@ -112,11 +110,6 @@ const BuildStatus = ({ componentsByArea, latestNightly, supported, untracked }) 
         <Typography variant="h4">Build Status</Typography>
         <Stack direction="row" alignItems="center" spacing={2}>
           <CoverageDisplay coverage={total.coverage} />
-          <a href={`https://gitlab.com${latestNightly.path}`} target="_blank" rel="noreferrer">
-            <Button variant="outlined" title={latestNightly.startedAt} endIcon={<Circle color={buildStatusColor(latestNightly.status)} />}>
-              latest Nightly
-            </Button>
-          </a>
         </Stack>
       </Stack>
 
@@ -307,18 +300,12 @@ export async function getStaticProps() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { client, executable, staging, supported, ...remainder } = reposByArea;
 
-  const latestNightlies = await getLatestNightlies(
-    new Date(),
-    1,
-    pipelines.find(pipeline => pipeline.name === 'Mender Client Acceptance Tests')
-  );
   const coverageCollection = await enhanceWithCoverageData({ ...remainder, client });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { product: dropHereToo, ...componentsByArea } = coverageCollection;
   return {
     props: {
       componentsByArea,
-      latestNightly: latestNightlies.length ? latestNightlies[0] : {},
       supported,
       untracked
     }
