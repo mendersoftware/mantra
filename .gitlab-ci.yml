@@ -135,6 +135,7 @@ build:docker:ui:
     paths:
       - image.tar
       - image-ui.tar
+      - ui/repoBuildStatus.json
   rules:
     - if: $CI_COMMIT_REF_NAME == "master"
     - changes:
@@ -180,3 +181,17 @@ sync:image:ui:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     TARGET_MANIFEST_FILE: kubernetes/mender-qastatus/ui-deployment.yaml
+
+notify:slack:build-status:
+  stage: publish
+  image: denoland/deno:alpine
+  needs:
+    - job: build:docker:ui
+      artifacts: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
+    - if: $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH != ""
+      when: manual
+  script:
+    - deno run --allow-read --allow-net --allow-env scripts/send-slack-notification.ts
