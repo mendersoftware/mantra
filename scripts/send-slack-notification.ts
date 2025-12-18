@@ -237,13 +237,13 @@ const areas = ['nightlies', 'backend', 'client', 'docs', 'qa', 'saas'] as const;
 const main = async () => {
   console.log('[INFO] Starting Slack notification script');
 
-  if (!isWithinNotificationWindow()) {
-    const now = new Date();
-    console.log(
-      `[INFO] Outside notification window (current UTC hour: ${now.getUTCHours()}). Notifications only sent between 09:00-10:00 UTC on weekdays => Exiting!`
-    );
-    Deno.exit(0);
-  }
+  // if (!isWithinNotificationWindow()) {
+  //   const now = new Date();
+  //   console.log(
+  //     `[INFO] Outside notification window (current UTC hour: ${now.getUTCHours()}). Notifications only sent between 09:00-10:00 UTC on weekdays => Exiting!`
+  //   );
+  //   Deno.exit(0);
+  // }
 
   console.log('[INFO] Within notification window (09:00-10:00 UTC), proceeding...');
 
