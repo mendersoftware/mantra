@@ -115,6 +115,19 @@ build:docker:ui:
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
       ${DOCKER_DIR:-.}
     - docker save $DOCKER_BUILD_SERVICE_IMAGE > image.tar
+    - echo "extracting repoBuildStatus.json from builder stage"
+    - docker build
+      --secret id=aws_access_key_id,env=AWS_ACCESS_KEY_ID
+      --secret id=aws_secret_access_key,env=AWS_SECRET_ACCESS_KEY
+      --secret id=gitlab_token,env=GITLAB_TOKEN
+      --secret id=github_token,env=GITHUB_BOT_TOKEN_REPO_FULL
+      --target builder
+      --tag ${DOCKER_BUILD_SERVICE_IMAGE}-builder
+      --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
+      ${DOCKER_DIR:-.}
+    - CONTAINER_ID=$(docker create ${DOCKER_BUILD_SERVICE_IMAGE}-builder)
+    - docker cp ${CONTAINER_ID}:/work/repoBuildStatus.json ui/repoBuildStatus.json
+    - docker rm ${CONTAINER_ID}
   after_script:
     - cp image.tar image-ui.tar
   artifacts:
