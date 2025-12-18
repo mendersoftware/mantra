@@ -1,6 +1,7 @@
 import { Circle, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from '@mui/material';
 
+import fs from 'fs/promises';
 import { gql, request } from 'graphql-request';
 
 import Link from '../components/link';
@@ -410,6 +411,7 @@ export async function getStaticProps() {
   const coverageCollection = await enhanceWithCoverageData({ ...remainder, client });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { product: dropHereToo, ...componentsByArea } = coverageCollection;
+  await fs.writeFile('repoBuildStatus.json', JSON.stringify(coverageCollection));
   return {
     props: {
       componentsByArea,
