@@ -1,9 +1,12 @@
-import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
+import { Circle, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from '@mui/material';
 
+import { existsSync } from 'fs';
+import fs from 'fs/promises';
 import { gql, request } from 'graphql-request';
 
 import Link from '../components/link';
+import { buildStatusColor } from '../src/constants';
 
 const areas = {
   backend: 'backend',
@@ -62,6 +65,8 @@ const repos = [
   { repo: 'sre-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas }
 ];
 
+const mainBranches = ['main', 'master'];
+
 const minWidth = { style: { minWidth: 110 } };
 const CoverageDisplay = ({ coverage }) =>
   !!coverage && coverage !== 'unknown' ? (
@@ -72,11 +77,15 @@ const CoverageDisplay = ({ coverage }) =>
     <div {...minWidth} />
   );
 
-const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', coverage, dependabotPendings }) => (
+const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', coverage, buildStatus, dependabotPendings }) => (
   <Stack direction="row" justifyContent="space-between">
     <Stack direction="row" alignContent="center" spacing={2}>
       <Link href={`https://gitlab.com/Northern.tech/${organization}/${repo}/-/pipelines?ref=${branch}`}>
-        <img alt={`${repo} ${branch} build-status`} src={`https://gitlab.com/Northern.tech/${organization}/${repo}/badges/${branch}/pipeline.svg`} />
+        {mainBranches.includes(branch) ? (
+          <Circle color={buildStatusColor(buildStatus.status)} />
+        ) : (
+          <img alt={`${repo} ${branch} build-status`} src={`https://gitlab.com/Northern.tech/${organization}/${repo}/badges/${branch}/pipeline.svg`} />
+        )}
       </Link>
       <Link href={`https://github.com/mendersoftware/${repo}/tree/${branch}`} target="_blank">
         <Typography variant="subtitle2">
@@ -122,12 +131,13 @@ const BuildStatus = ({ componentsByArea, supported, untracked }) => {
             </Stack>
           </AccordionSummary>
           <AccordionDetails>
-            {component.repos.map(({ repo, branches = ['master'], coverage, dependabotPendings, organization }) =>
+            {component.repos.map(({ repo, branches = ['master'], buildStatus, coverage, dependabotPendings, organization }) =>
               branches.map(branch => (
                 <RepoStatusItem
                   key={`${repo}-${branch}`}
                   repo={repo}
                   branch={branch}
+                  buildStatus={buildStatus}
                   coverage={coverage}
                   dependabotPendings={dependabotPendings}
                   organization={organization}
@@ -143,9 +153,18 @@ const BuildStatus = ({ componentsByArea, supported, untracked }) => {
           <Typography variant="h6">Supported Component Versions</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          {supported.repos.reduce((accu, { repo, supportedBranches = [], coverage, organization }) => {
+          {supported.repos.reduce((accu, { repo, supportedBranches = [], coverage, buildStatus, organization }) => {
             supportedBranches.forEach(branch =>
-              accu.push(<RepoStatusItem key={`${repo}-${branch}`} repo={repo} branch={branch} coverage={coverage} organization={organization} />)
+              accu.push(
+                <RepoStatusItem
+                  key={`${repo}-${branch}`}
+                  repo={repo}
+                  branch={branch}
+                  buildStatus={buildStatus}
+                  coverage={coverage}
+                  organization={organization}
+                />
+              )
             );
             return accu;
           }, [])}
@@ -178,11 +197,11 @@ const transformReposIntoAreas = withDependabot =>
       if (!(accu[item.area] && Array.isArray(accu[item.area].repos))) {
         accu[item.area] = { repos: [] };
       }
-      const { dependabotPendings = 0 } = withDependabot.find(({ name }) => name === item.repo) ?? {};
-      accu[item.area].repos.push({ ...item, dependabotPendings });
+      const { dependabotPendings = 0, buildStatus = {} } = withDependabot.find(({ name }) => name === item.repo) ?? {};
+      accu[item.area].repos.push({ ...item, dependabotPendings, buildStatus });
       accu = areaTargetsMap.reduce((result, area) => {
         if (item[area.name]) {
-          result[area.target].repos.push({ ...item, dependabotPendings });
+          result[area.target].repos.push({ ...item, dependabotPendings, buildStatus });
         }
         return result;
       }, accu);
@@ -292,17 +311,140 @@ const getGithubOrganizationState = async () => {
   );
 };
 
+const pipelineQuery = gql`
+  query getPipeline($group: ID!, $ref: String!, $cursor: String) {
+    group(fullPath: $group) {
+      projects(first: 100, after: $cursor) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          name
+          fullPath
+          pipelines(first: 1, ref: $ref) {
+            nodes {
+              id
+              status
+              commit {
+                id
+                author {
+                  username
+                }
+                authorName
+              }
+              jobs(statuses: FAILED, retried: false) {
+                nodes {
+                  webPath
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const gitlabGraphqlUrl = 'https://gitlab.com/api/graphql';
+const groups = ['Mender', 'MenderSaaS'];
+const gitlabApiRequestHeaders = { headers: { Authorization: `Bearer ${process.env.GITLAB_TOKEN}` } };
+
+const getAllProjects = async (group, ref) => {
+  let allProjects = [];
+  let cursor = null;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const data = await request({
+      url: gitlabGraphqlUrl,
+      document: pipelineQuery,
+      variables: { group: `Northern.tech/${group}`, ref, cursor },
+      requestHeaders: gitlabApiRequestHeaders.headers
+    });
+
+    const projects = data?.group?.projects;
+    if (!projects) {
+      break;
+    }
+
+    allProjects = allProjects.concat(projects.nodes);
+    hasNextPage = projects.pageInfo.hasNextPage;
+    cursor = projects.pageInfo.endCursor;
+  }
+
+  return allProjects;
+};
+
+const getGitlabPipelinesState = async () => {
+  if (!process.env.GITLAB_TOKEN) {
+    return [];
+  }
+  if (!existsSync('responses')) {
+    await fs.mkdir('responses');
+  }
+  const retrievalTargets = groups.flatMap(group => mainBranches.map(ref => ({ ref, group })));
+  const pipelinesRetrieval = retrievalTargets.map(async ({ ref, group }) => {
+    let pipelines = [];
+    try {
+      const allProjects = await getAllProjects(group, ref);
+      console.log(`(BuildStatus): fetched ${allProjects.length} projects for ${group}/${ref}`);
+      await fs.writeFile(`responses/${group}-${ref}-pipelineResponse.json`, JSON.stringify(allProjects));
+      pipelines = allProjects.filter(project => !!project.pipelines.nodes.length);
+    } catch (error) {
+      console.error(`(Gitlab BuildStatus): GraphQL query failed for ref ${ref}:`, error);
+      return pipelines;
+    }
+    return pipelines;
+  });
+  const pipelines = await Promise.all(pipelinesRetrieval);
+  const collectedPipelines = pipelines.flat();
+  const result = collectedPipelines.reduce((accu, repoPipeline) => {
+    if (accu[repoPipeline.fullPath]) {
+      return accu;
+    }
+    const pipeline = repoPipeline.pipelines.nodes[0];
+    accu[repoPipeline.fullPath] = {
+      name: repoPipeline.name,
+      fullPath: repoPipeline.fullPath,
+      pipelineId: pipeline.id.substring(pipeline.id.lastIndexOf('/') + 1),
+      status: pipeline.status,
+      commit: {
+        id: pipeline.commit.id.substring(pipeline.commit.id.lastIndexOf('/') + 1),
+        author: pipeline.commit.authorName || pipeline.commit.author?.username || ''
+      },
+      failedJob: pipeline.jobs.nodes.length ? pipeline.jobs.nodes[0].webPath : ''
+    };
+    return accu;
+  }, {});
+  return Object.values(result);
+};
+
+const enhanceWithBuildStatusData = (withDependabot, pipelineBuildStatusInfo) =>
+  pipelineBuildStatusInfo.reduce((accu, item) => {
+    const itemIndex = accu.findIndex(repoInfo => repoInfo.name === item.name);
+    if (itemIndex > -1) {
+      accu[itemIndex] = { ...accu[itemIndex], buildStatus: item };
+    } else {
+      accu.push({ name: item.name, buildStatus: item });
+    }
+    return accu;
+  }, withDependabot);
+
 export async function getStaticProps() {
   const cutoffDate = new Date();
   cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
   const { untracked, withDependabot } = await getGithubOrganizationState();
-  const reposByArea = transformReposIntoAreas(withDependabot);
+  const pipelineStates = await getGitlabPipelinesState();
+  const withDependabotAndPipelineStatus = await enhanceWithBuildStatusData(withDependabot, pipelineStates);
+  const reposByArea = transformReposIntoAreas(withDependabotAndPipelineStatus);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { client, executable, staging, supported, ...remainder } = reposByArea;
 
   const coverageCollection = await enhanceWithCoverageData({ ...remainder, client });
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { product: dropHereToo, ...componentsByArea } = coverageCollection;
+  await fs.writeFile('repoBuildStatus.json', JSON.stringify(coverageCollection));
   return {
     props: {
       componentsByArea,
