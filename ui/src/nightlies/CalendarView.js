@@ -38,7 +38,7 @@ const Event = props => {
 };
 
 export const PipelineCalendar = props => {
-  const { pipelines } = props;
+  const { pipelines = [] } = props;
 
   const eventPropGetter = event => ({
     style: {
