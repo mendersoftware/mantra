@@ -193,7 +193,7 @@ const transformReposIntoAreas = withDependabot =>
 
 const badgeUrl = 'badges/coveralls_';
 const retrieveCoverageInfo = async repoInfo => {
-  const url = `https://coveralls.io/repos/github/mendersoftware/${repoInfo.repo}/badge.svg?branch=master`;
+  const url = `https://coveralls.io/repos/github/mendersoftware/${repoInfo.repo}/badge.svg?branch=${repoInfo.branches ? repoInfo.branches[0] : 'master'}`;
   const coverage = await fetch(url).then(res => {
     const coverage = res.url.substring(res.url.indexOf(badgeUrl) + badgeUrl.length, res.url.indexOf('.svg'));
     return coverage === 'unknown' ? coverage : Number(coverage);
