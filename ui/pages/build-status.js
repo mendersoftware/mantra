@@ -1,6 +1,7 @@
 import { Circle, ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from '@mui/material';
 
+import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import { gql, request } from 'graphql-request';
 
@@ -313,7 +314,7 @@ const getGithubOrganizationState = async () => {
 const pipelineQuery = gql`
   query getPipeline($group: ID!, $ref: String!) {
     group(fullPath: $group) {
-      projects(first: 200) {
+      projects(first: 250) {
         nodes {
           name
           fullPath
@@ -341,22 +342,28 @@ const pipelineQuery = gql`
 `;
 
 const gitlabGraphqlUrl = 'https://gitlab.com/api/graphql';
-const menderGitlabGroupPath = 'Northern.tech/Mender';
+const groups = ['Mender', 'MenderSaaS'];
 const gitlabApiRequestHeaders = { headers: { Authorization: `Bearer ${process.env.GITLAB_TOKEN}` } };
 
 const getGitlabPipelinesState = async () => {
   if (!process.env.GITLAB_TOKEN) {
     return [];
   }
-  const pipelinesRetrieval = mainBranches.map(async ref => {
+  if (!existsSync('responses')) {
+    await fs.mkdir('responses');
+  }
+  const retrievalTargets = groups.flatMap(group => mainBranches.map(ref => ({ ref, group })));
+  const pipelinesRetrieval = retrievalTargets.map(async ({ ref, group }) => {
     let pipelines = [];
     try {
       const data = await request({
         url: gitlabGraphqlUrl,
         document: pipelineQuery,
-        variables: { group: menderGitlabGroupPath, ref },
+        variables: { group: `Northern.tech/${group}`, ref },
         requestHeaders: gitlabApiRequestHeaders.headers
       });
+      console.log(`(BuildStatus): writing response to ::: responses/${group}-${ref}-pipelineResponse.json`);
+      await fs.writeFile(`responses/${group}-${ref}-pipelineResponse.json`, JSON.stringify(data));
       pipelines = data?.group?.projects?.nodes.filter(project => !!project.pipelines.nodes.length);
     } catch (error) {
       console.error(`(Gitlab BuildStatus): GraphQL query failed for ref ${ref}:`, error);
@@ -364,8 +371,8 @@ const getGitlabPipelinesState = async () => {
     }
     return pipelines;
   });
-  const [mainsPipelines, mastersPipelines] = await Promise.all(pipelinesRetrieval);
-  const collectedPipelines = [...mainsPipelines, ...mastersPipelines];
+  const pipelines = await Promise.all(pipelinesRetrieval);
+  const collectedPipelines = pipelines.flat();
   const result = collectedPipelines.reduce((accu, repoPipeline) => {
     if (accu[repoPipeline.fullPath]) {
       return accu;

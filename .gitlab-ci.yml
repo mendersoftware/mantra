@@ -1,16 +1,16 @@
 variables:
   DOCKER_HOST:
-    value: "tcp://docker:2376"
-    description: "Required to run dind inside k8s runners with TLS"
+    value: 'tcp://docker:2376'
+    description: 'Required to run dind inside k8s runners with TLS'
   DOCKER_TLS_CERTDIR:
-    value: "/certs"
+    value: '/certs'
     description: "The cert dir inside the gitlab runner. Don't change this."
   DOCKER_TLS_VERIFY:
     value: 1
-    description: "Enable TLS verification for docker in dind"
+    description: 'Enable TLS verification for docker in dind'
   DOCKER_CERT_PATH:
-    value: "$DOCKER_TLS_CERTDIR/client"
-    description: "Used for docker entrypoints. See https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4125"
+    value: '$DOCKER_TLS_CERTDIR/client'
+    description: 'Used for docker entrypoints. See https://gitlab.com/gitlab-org/gitlab-runner/-/issues/4125'
 
 stages:
   - test
@@ -126,6 +126,7 @@ build:docker:ui:
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
       ${DOCKER_DIR:-.}
     - CONTAINER_ID=$(docker create ${DOCKER_BUILD_SERVICE_IMAGE}-builder)
+    - docker cp ${CONTAINER_ID}:/work/responses ui/responses/
     - docker cp ${CONTAINER_ID}:/work/repoBuildStatus.json ui/repoBuildStatus.json
     - docker cp ${CONTAINER_ID}:/work/nightliesBuildStatus.json ui/nightliesBuildStatus.json
     - docker rm ${CONTAINER_ID}
@@ -136,6 +137,7 @@ build:docker:ui:
     paths:
       - image.tar
       - image-ui.tar
+      - ui/responses/
       - ui/repoBuildStatus.json
       - ui/nightliesBuildStatus.json
   rules:
