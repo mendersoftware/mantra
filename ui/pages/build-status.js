@@ -32,7 +32,7 @@ const repos = [
   { repo: 'mender-docs-site', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-docs', branches: ['master', 'hosted'], staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-flash', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.0.x'] },
-  { repo: 'mender-gateway', staging: true, isExecutable: true, isProduct: true, area: areas.backend, supportedBranches: ['2.0.x'] },
+  { repo: 'mender-gateway', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['2.0.x'] },
   { repo: 'mender-helm', staging: false, isExecutable: false, isProduct: false, area: areas.saas, supportedBranches: ['5.x'] },
   { repo: 'mender-image-tests', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'mender-mcu', branches: ['main'], staging: false, isExecutable: true, isProduct: true, area: areas.client },
