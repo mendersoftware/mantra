@@ -37,31 +37,36 @@ const Event = props => {
   );
 };
 
-export const PipelineCalendar = props => {
-  const { pipelines = [] } = props;
+const eventPropGetter = event => ({
+  style: {
+    backgroundColor: event.color || 'transparent',
+    color: 'black',
+    border: 'none',
+    padding: '2px'
+  }
+});
 
-  const eventPropGetter = event => ({
-    style: {
-      backgroundColor: event.color || 'transparent',
-      color: 'black',
-      border: 'none',
-      padding: '2px'
+const pipelinesToEvents = pipelinesArr =>
+  pipelinesArr.reduce((accu, pipelines) => {
+    const keys = Object.keys(pipelines);
+    if (!keys.length) {
+      return accu;
     }
-  });
-  const pipelinesToEvents = useCallback(pipelinesArr => {
-    const events = [];
-    pipelinesArr.forEach(pipelines => {
-      const event = { data: [], title: '', allDay: true };
-      Object.keys(pipelines).forEach(key => {
-        event.data.push({ ...pipelines[key], name: key });
-        event.start = new Date(pipelines[key].shiftedDate);
-        event.end = new Date(pipelines[key].shiftedDate);
-        event.id = pipelines[key].shiftedDate;
-      });
-      events.push(event);
-    });
-    return events;
+    const lastKey = keys[keys.length - 1];
+    const { shiftedDate } = pipelines[lastKey];
+    const event = {
+      data: Object.entries(pipelines).map(([key, pipeline]) => ({ ...pipeline, name: key })),
+      title: '',
+      start: new Date(shiftedDate),
+      end: new Date(shiftedDate),
+      id: shiftedDate,
+      allDay: true
+    };
+    accu.push(event);
+    return accu;
   }, []);
+
+export const PipelineCalendar = ({ pipelines = [] }) => {
   const events = pipelinesToEvents(pipelines);
   return (
     <Calendar
