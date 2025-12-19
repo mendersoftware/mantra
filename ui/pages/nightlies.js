@@ -5,6 +5,7 @@ import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
 import dayjs from 'dayjs';
+import fs from 'fs/promises';
 import { gql, request } from 'graphql-request';
 
 import { PipelineCalendar } from '../src/nightlies/CalendarView';
@@ -56,6 +57,8 @@ const pipelineEnrichmentQuery = gql`
   query getPipelineDetails($projectPath: ID!, $iid: ID!) {
     project(fullPath: $projectPath) {
       pipeline(iid: $iid) {
+        id
+        status
         testReportSummary {
           total {
             count
@@ -65,11 +68,18 @@ const pipelineEnrichmentQuery = gql`
             success
           }
         }
+        commit {
+          id
+          author {
+            username
+          }
+        }
         jobs {
           nodes {
             name
             status
             retried
+            webPath
           }
         }
       }
@@ -173,10 +183,22 @@ const getPipelineDetails = async (pipeline, pipelineIid) => {
     return emptyDetails;
   }
   const retryInfo = calculateRetryInfo(pipelineData.jobs?.nodes || []);
+  const failedJobs = (pipelineData.jobs?.nodes || []).filter(({ status }) => status === 'FAILED');
   return {
     testReportSummary: pipelineData.testReportSummary || {},
     hasRetries: retryInfo.hasRetries,
-    retriedJobCount: retryInfo.retriedJobCount
+    retriedJobCount: retryInfo.retriedJobCount,
+    buildStatus: {
+      name: pipeline.name,
+      fullPath: pipeline.projectPath,
+      pipelineId: pipelineData.id.substring(pipelineData.id.lastIndexOf('/') + 1),
+      status: pipelineData.status,
+      commit: {
+        id: pipelineData.commit.id?.substring(pipelineData.commit.id.lastIndexOf('/') + 1),
+        author: pipelineData.commit.author?.username || ''
+      },
+      failedJob: failedJobs.length ? failedJobs[0].webPath : ''
+    }
   };
 };
 
@@ -229,7 +251,8 @@ export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
         testReportSummary: details.testReportSummary,
         hasRetries: details.hasRetries,
         retriedJobCount: details.retriedJobCount,
-        shiftedDate
+        shiftedDate,
+        buildStatus: details.buildStatus
       };
     })
   );
@@ -290,6 +313,16 @@ const sortByNamesOrder = pipelineRuns => {
   return sortedRuns;
 };
 
+const emptyBuildStatusItem = {
+  staging: false,
+  isExecutable: false,
+  isProduct: false,
+  dependabotPendings: 0,
+  area: 'nightlies',
+  repo: '',
+  buildStatus: {}
+};
+
 export async function getStaticProps() {
   const nightlies = {};
   const nightliesArr = [];
@@ -300,10 +333,18 @@ export async function getStaticProps() {
     return nightlies[pipeline.name];
   });
   await Promise.all(pipelineFetch);
+  const flatNightlies = sortByNamesOrder(mergeByDate(nightliesArr));
+
+  const nightliesBuilds = Object.values(flatNightlies[0]).map(({ buildStatus }) => ({
+    ...emptyBuildStatusItem,
+    repo: buildStatus.name,
+    buildStatus
+  }));
+  await fs.writeFile('nightliesBuildStatus.json', JSON.stringify({ nightlies: { repos: nightliesBuilds } }));
   return {
     props: {
       nightlies,
-      flatNightlies: sortByNamesOrder(mergeByDate(nightliesArr))
+      flatNightlies
     }
   };
 }

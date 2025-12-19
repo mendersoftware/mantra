@@ -126,7 +126,9 @@ build:docker:ui:
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
       ${DOCKER_DIR:-.}
     - CONTAINER_ID=$(docker create ${DOCKER_BUILD_SERVICE_IMAGE}-builder)
+    - docker cp ${CONTAINER_ID}:/work/responses ui/responses/
     - docker cp ${CONTAINER_ID}:/work/repoBuildStatus.json ui/repoBuildStatus.json
+    - docker cp ${CONTAINER_ID}:/work/nightliesBuildStatus.json ui/nightliesBuildStatus.json
     - docker rm ${CONTAINER_ID}
   after_script:
     - cp image.tar image-ui.tar
@@ -135,7 +137,9 @@ build:docker:ui:
     paths:
       - image.tar
       - image-ui.tar
+      - ui/responses/
       - ui/repoBuildStatus.json
+      - ui/nightliesBuildStatus.json
   rules:
     - if: $CI_COMMIT_REF_NAME == "master"
     - changes:
