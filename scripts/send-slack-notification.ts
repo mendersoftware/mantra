@@ -32,6 +32,8 @@ interface AreaData {
 interface RepoStatusFile {
   backend?: AreaData;
   client?: AreaData;
+  docs?: AreaData;
+  nightlies?: AreaData;
   saas?: AreaData;
   [key: string]: AreaData | { coverage: number } | undefined;
 }
@@ -43,12 +45,17 @@ interface FailedRepo {
   jobUrl: string;
 }
 
+interface PendingRepo {
+  repo: string;
+  fullPath?: string;
+}
+
 interface AreaAnalysis {
   success: number;
   failed: number;
   pending: number;
   failedRepos: FailedRepo[];
-  pendingRepos: string[];
+  pendingRepos: PendingRepo[];
 }
 
 interface SlackField {
@@ -66,9 +73,9 @@ interface SlackMessage {
   blocks: SlackBlock[];
 }
 
-const loadRepoStatus = async (): Promise<RepoStatusFile> => {
+const loadRepoStatus = async (filePath: string): Promise<RepoStatusFile> => {
   try {
-    const data = await Deno.readTextFile('ui/repoStatus.json');
+    const data = await Deno.readTextFile(filePath);
     return JSON.parse(data);
   } catch (error) {
     console.error('[ERROR] Failed to parse repoStatus:', error);
@@ -97,13 +104,13 @@ const analyzeArea = (area: AreaData, areaName: string): AreaAnalysis => {
 
   for (const repo of area.repos) {
     const status = classifyStatus(repo.buildStatus);
+    const buildStatus = repo.buildStatus as Partial<BuildStatus>;
 
     if (status === 'success') {
       analysis.success++;
     } else if (status === 'failed') {
       analysis.failed++;
 
-      const buildStatus = repo.buildStatus as Partial<BuildStatus>;
       const author = buildStatus.commit?.author || '';
       const pipelineUrl =
         buildStatus.fullPath && buildStatus.pipelineId ? `https://gitlab.com/${buildStatus.fullPath}/-/pipelines/${buildStatus.pipelineId}` : '';
@@ -117,7 +124,7 @@ const analyzeArea = (area: AreaData, areaName: string): AreaAnalysis => {
       });
     } else {
       analysis.pending++;
-      analysis.pendingRepos.push(repo.repo);
+      analysis.pendingRepos.push({ repo: repo.repo, fullPath: buildStatus.fullPath });
     }
   }
 
@@ -163,8 +170,9 @@ const buildSlackMessage = (areaName: string, analysis: AreaAnalysis): SlackMessa
   }
 
   if (analysis.pendingRepos.length > 0) {
-    const sectionContent = analysis.pendingRepos.reduce((accu, repo) => {
-      accu += `- *${repo}* - <https://gitlab.com/Northern.tech/Mender/${repo}/-/pipelines|Pipelines overview>\n`;
+    const sectionContent = analysis.pendingRepos.reduce((accu, { fullPath, repo }) => {
+      const repoPath = fullPath ? fullPath : `Northern.tech/Mender/${repo}`;
+      accu += `- *${repo}* - <https://gitlab.com/${repoPath}/-/pipelines|Pipelines overview>\n`;
       return accu;
     }, '');
     sections.push({ type: 'section', text: { type: 'mrkdwn', text: `*Pending Repositories:*\n\n${sectionContent}` } });
@@ -210,6 +218,9 @@ const isWithinNotificationWindow = (): boolean => {
   return hour === 7 && now.getDay() < 6;
 };
 
+const buildStatusFiles = ['ui/nightliesBuildStatus.json', 'ui/repoBuildStatus.json'];
+const areas = ['nightlies', 'backend', 'saas'] as const;
+
 const main = async () => {
   console.log('[INFO] Starting Slack notification script');
 
@@ -229,19 +240,22 @@ const main = async () => {
     Deno.exit(1);
   }
 
-  const data = await loadRepoStatus();
-
-  await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'header', text: { type: 'plain_text', text: 'Build Status' } }] });
-  const areas = ['backend', 'saas'] as const;
-  for (const [index, areaName] of areas.entries()) {
-    const area = data[areaName]!;
-    console.log(`\n[INFO] Processing ${areaName} area`);
-    const analysis = analyzeArea(area, areaName);
-    const message = buildSlackMessage(areaName, analysis);
-    console.log(JSON.stringify(message));
-    await sendToSlackWithRetry(webhookUrl, message);
-    if (index < areas.length - 1) {
-      await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'divider' }] });
+  for (const filePath of buildStatusFiles) {
+    const data = await loadRepoStatus(filePath);
+    await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'header', text: { type: 'plain_text', text: 'Build Status' } }] });
+    for (const [index, areaName] of areas.entries()) {
+      const area = data[areaName]!;
+      if (!area) {
+        continue;
+      }
+      console.log(`\n[INFO] Processing ${areaName} area`);
+      const analysis = analyzeArea(area, areaName);
+      const message = buildSlackMessage(areaName, analysis);
+      console.log(JSON.stringify(message));
+      await sendToSlackWithRetry(webhookUrl, message);
+      if (index < areas.length - 1) {
+        await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'divider' }] });
+      }
     }
   }
 
