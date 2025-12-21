@@ -312,9 +312,13 @@ const getGithubOrganizationState = async () => {
 };
 
 const pipelineQuery = gql`
-  query getPipeline($group: ID!, $ref: String!) {
+  query getPipeline($group: ID!, $ref: String!, $cursor: String) {
     group(fullPath: $group) {
-      projects(first: 250) {
+      projects(first: 100, after: $cursor) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
         nodes {
           name
           fullPath
@@ -345,6 +349,32 @@ const gitlabGraphqlUrl = 'https://gitlab.com/api/graphql';
 const groups = ['Mender', 'MenderSaaS'];
 const gitlabApiRequestHeaders = { headers: { Authorization: `Bearer ${process.env.GITLAB_TOKEN}` } };
 
+const getAllProjects = async (group, ref) => {
+  let allProjects = [];
+  let cursor = null;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const data = await request({
+      url: gitlabGraphqlUrl,
+      document: pipelineQuery,
+      variables: { group: `Northern.tech/${group}`, ref, cursor },
+      requestHeaders: gitlabApiRequestHeaders.headers
+    });
+
+    const projects = data?.group?.projects;
+    if (!projects) {
+      break;
+    }
+
+    allProjects = allProjects.concat(projects.nodes);
+    hasNextPage = projects.pageInfo.hasNextPage;
+    cursor = projects.pageInfo.endCursor;
+  }
+
+  return allProjects;
+};
+
 const getGitlabPipelinesState = async () => {
   if (!process.env.GITLAB_TOKEN) {
     return [];
@@ -356,15 +386,11 @@ const getGitlabPipelinesState = async () => {
   const pipelinesRetrieval = retrievalTargets.map(async ({ ref, group }) => {
     let pipelines = [];
     try {
-      const data = await request({
-        url: gitlabGraphqlUrl,
-        document: pipelineQuery,
-        variables: { group: `Northern.tech/${group}`, ref },
-        requestHeaders: gitlabApiRequestHeaders.headers
-      });
+      const allProjects = await getAllProjects(group, ref);
+      console.log(`(BuildStatus): fetched ${allProjects.length} projects for ${group}/${ref}`);
       console.log(`(BuildStatus): writing response to ::: responses/${group}-${ref}-pipelineResponse.json`);
-      await fs.writeFile(`responses/${group}-${ref}-pipelineResponse.json`, JSON.stringify(data));
-      pipelines = data?.group?.projects?.nodes.filter(project => !!project.pipelines.nodes.length);
+      await fs.writeFile(`responses/${group}-${ref}-pipelineResponse.json`, JSON.stringify(allProjects));
+      pipelines = allProjects.filter(project => !!project.pipelines.nodes.length);
     } catch (error) {
       console.error(`(Gitlab BuildStatus): GraphQL query failed for ref ${ref}:`, error);
       return pipelines;
