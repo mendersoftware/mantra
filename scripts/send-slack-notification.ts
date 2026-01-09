@@ -219,7 +219,7 @@ const isWithinNotificationWindow = (): boolean => {
 };
 
 const buildStatusFiles = ['ui/nightliesBuildStatus.json', 'ui/repoBuildStatus.json'];
-const areas = ['nightlies', 'backend', 'saas'] as const;
+const areas = ['nightlies', 'backend', 'client', 'docs', 'qa', 'saas'] as const;
 
 const main = async () => {
   console.log('[INFO] Starting Slack notification script');
