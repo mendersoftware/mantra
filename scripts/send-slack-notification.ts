@@ -239,10 +239,11 @@ const main = async () => {
     console.error('[ERROR] SLACK_WEBHOOK_URL environment variable not set');
     Deno.exit(1);
   }
+  const today = new Intl.DateTimeFormat('nb-NO', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'header', text: { type: 'plain_text', text: `Build Status - ${today}` } }] });
 
   for (const filePath of buildStatusFiles) {
     const data = await loadRepoStatus(filePath);
-    await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'header', text: { type: 'plain_text', text: 'Build Status' } }] });
     for (const [index, areaName] of areas.entries()) {
       const area = data[areaName]!;
       if (!area) {
@@ -252,10 +253,10 @@ const main = async () => {
       const analysis = analyzeArea(area, areaName);
       const message = buildSlackMessage(areaName, analysis);
       console.log(JSON.stringify(message));
-      await sendToSlackWithRetry(webhookUrl, message);
       if (index < areas.length - 1) {
-        await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'divider' }] });
+        message.blocks.push({ type: 'divider' });
       }
+      await sendToSlackWithRetry(webhookUrl, message);
     }
   }
 
