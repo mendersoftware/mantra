@@ -66,6 +66,7 @@ const repos = [
 ];
 
 const mainBranches = ['main', 'master'];
+const defaultBranches = ['master'];
 
 const minWidth = { style: { minWidth: 110 } };
 const CoverageDisplay = ({ coverage }) =>
@@ -131,7 +132,7 @@ const BuildStatus = ({ componentsByArea, supported, untracked }) => {
             </Stack>
           </AccordionSummary>
           <AccordionDetails>
-            {component.repos.map(({ repo, branches = ['master'], buildStatus, coverage, dependabotPendings, organization }) =>
+            {component.repos.map(({ repo, branches = defaultBranches, buildStatus, coverage, dependabotPendings, organization }) =>
               branches.map(branch => (
                 <RepoStatusItem
                   key={`${repo}-${branch}`}
@@ -325,6 +326,7 @@ const pipelineQuery = gql`
           pipelines(first: 1, ref: $ref) {
             nodes {
               id
+              ref
               status
               commit {
                 id
@@ -404,6 +406,12 @@ const getGitlabPipelinesState = async () => {
       return accu;
     }
     const pipeline = repoPipeline.pipelines.nodes[0];
+    const checkedRepo = repos.find(({ repo }) => repo === repoPipeline.name);
+    const hasBranchMismatch = !(checkedRepo?.branches ?? defaultBranches).includes(pipeline.ref);
+    if (hasBranchMismatch) {
+      console.warn(`(BuildStatus): ${repoPipeline.name} is not expected to track the ${pipeline.ref} branch.`);
+      return accu;
+    }
     accu[repoPipeline.fullPath] = {
       name: repoPipeline.name,
       fullPath: repoPipeline.fullPath,
