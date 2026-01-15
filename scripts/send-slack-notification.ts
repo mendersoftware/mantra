@@ -180,6 +180,19 @@ const buildSlackMessage = (areaName: string, analysis: AreaAnalysis): SlackMessa
   return { blocks: sections };
 };
 
+const getMoodEnhancer = async () => {
+  const jokeResponse = await fetch('https://v2.jokeapi.dev/joke/Programming?blacklistFlags=nsfw,sexist,racist');
+  const joke = await jokeResponse.json();
+  const blocks: SlackBlock[] = [{ type: 'divider' }];
+  if (joke.type === 'single') {
+    blocks.push({ type: 'section', text: { type: 'mrkdwn', text: joke.joke } });
+  } else {
+    blocks.push({ type: 'section', text: { type: 'mrkdwn', text: joke.setup } });
+    blocks.push({ type: 'section', text: { type: 'mrkdwn', text: joke.delivery } });
+  }
+  return { blocks };
+};
+
 const sendToSlackWithRetry = async (webhookUrl: string, message: SlackMessage, maxRetries = 3): Promise<void> => {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     const delay = Math.pow(2, attempt) * 1000;
@@ -259,6 +272,9 @@ const main = async () => {
       await sendToSlackWithRetry(webhookUrl, message);
     }
   }
+
+  const moodEnhancer = await getMoodEnhancer();
+  await sendToSlackWithRetry(webhookUrl, moodEnhancer);
 
   console.log('\n[INFO] All notifications sent successfully');
 };
