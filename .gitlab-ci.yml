@@ -57,7 +57,7 @@ test:backend-unit:
   stage: test
   needs: []
   services:
-    - name: postgres:12.22-bullseye
+    - name: postgres:12.22-bookworm
       alias: db
   variables:
     POSTGRES_PASSWORD: password
