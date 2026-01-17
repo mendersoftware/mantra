@@ -151,6 +151,8 @@ test:composition:
     - docker compose -f docker-compose.yml -f docker-compose.test.yml up --no-recreate -d
     - cd backend
     - TOXENV=functional tox
+  after_script:
+    - docker compose -f docker-compose.yml -f docker-compose.test.yml logs
 
 publish:image:ui:
   extends: publish:image
