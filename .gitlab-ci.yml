@@ -57,7 +57,7 @@ test:backend-unit:
   stage: test
   needs: []
   services:
-    - name: postgres:12.22-bullseye
+    - name: postgres:12.22-bookworm
       alias: db
   variables:
     POSTGRES_PASSWORD: password
@@ -129,21 +129,20 @@ build:docker:ui:
 
 test:composition:
   stage: acceptance_tests
-  image: tiangolo/docker-with-compose
+  image: docker:29-cli
   needs:
     - job: build:docker
       artifacts: true
     - job: build:docker:ui
       artifacts: true
   services:
-    - docker:20.10.8-dind
+    - docker:29-dind
   before_script:
     - docker load -i image-api.tar
     - docker tag mendersoftware/mantra-api:${CI_COMMIT_REF_SLUG} mendersoftware/mantra-api:pr
     - docker load -i image-ui.tar
     - docker tag mendersoftware/mantra-ui:${CI_COMMIT_REF_SLUG} mendersoftware/mantra-ui:pr
-    - apk add --no-cache python3
-    - pip3 install --ignore-installed tox
+    - apk add --no-cache python3 py3-pip py3-tox
     - echo $'[api]\nbase_url = http://test:test@docker/api' > backend/tetra-test.conf
   script:
     - docker compose -f docker-compose.yml -f docker-compose.test.yml up -d db
