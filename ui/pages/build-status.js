@@ -82,7 +82,7 @@ const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', cove
   <Stack direction="row" justifyContent="space-between">
     <Stack direction="row" alignContent="center" spacing={2}>
       <Link href={`https://gitlab.com/Northern.tech/${organization}/${repo}/-/pipelines?ref=${branch}`}>
-        {mainBranches.includes(branch) ? (
+        {mainBranches.includes(branch) && buildStatus ? (
           <Circle color={buildStatusColor(buildStatus.status)} />
         ) : (
           <img alt={`${repo} ${branch} build-status`} src={`https://gitlab.com/Northern.tech/${organization}/${repo}/badges/${branch}/pipeline.svg`} />
