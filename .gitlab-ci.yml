@@ -115,6 +115,21 @@ build:docker:ui:
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
       ${DOCKER_DIR:-.}
     - docker save $DOCKER_BUILD_SERVICE_IMAGE > image.tar
+    - echo "extracting repoBuildStatus.json from builder stage"
+    - docker build
+      --secret id=aws_access_key_id,env=AWS_ACCESS_KEY_ID
+      --secret id=aws_secret_access_key,env=AWS_SECRET_ACCESS_KEY
+      --secret id=gitlab_token,env=GITLAB_TOKEN
+      --secret id=github_token,env=GITHUB_BOT_TOKEN_REPO_FULL
+      --target builder
+      --tag ${DOCKER_BUILD_SERVICE_IMAGE}-builder
+      --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
+      ${DOCKER_DIR:-.}
+    - CONTAINER_ID=$(docker create ${DOCKER_BUILD_SERVICE_IMAGE}-builder)
+    - docker cp ${CONTAINER_ID}:/work/responses ui/responses/
+    - docker cp ${CONTAINER_ID}:/work/repoBuildStatus.json ui/repoBuildStatus.json
+    - docker cp ${CONTAINER_ID}:/work/nightliesBuildStatus.json ui/nightliesBuildStatus.json
+    - docker rm ${CONTAINER_ID}
   after_script:
     - cp image.tar image-ui.tar
   artifacts:
@@ -122,6 +137,9 @@ build:docker:ui:
     paths:
       - image.tar
       - image-ui.tar
+      - ui/responses/
+      - ui/repoBuildStatus.json
+      - ui/nightliesBuildStatus.json
   rules:
     - if: $CI_COMMIT_REF_NAME == "master"
     - changes:
@@ -166,3 +184,17 @@ sync:image:ui:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     TARGET_MANIFEST_FILE: kubernetes/mender-qastatus/ui-deployment.yaml
+
+notify:slack:build-status:
+  stage: publish
+  image: denoland/deno:alpine
+  needs:
+    - job: build:docker:ui
+      artifacts: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: always
+    - if: $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH != ""
+      when: manual
+  script:
+    - deno run --allow-read --allow-net --allow-env scripts/send-slack-notification.ts
