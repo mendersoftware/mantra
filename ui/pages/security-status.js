@@ -160,19 +160,13 @@ const getFile = async (s3Client, filename) => {
 
 const persistLogData = async fileContents =>
   fileContents.reduce(async (accu, item) => {
-    // console.log('checking', item.image);
     if (!item.jsonContent?.Results) {
       return accu;
     }
     let filePath = item.image.split('/');
     const fileName = filePath.pop();
     const targetFolder = path.join('public', 'logs', ...filePath);
-    try {
-      await fs.access(targetFolder);
-    } catch (error) {
-      console.log('oh noes', error);
-      await fs.mkdir(targetFolder, { recursive: true });
-    }
+    await fs.mkdir(targetFolder, { recursive: true });
     console.log('writing', fileName);
     const logfile = path.join(targetFolder, `${fileName}.log`);
     await fs.writeFile(logfile, item.logContent);
