@@ -196,5 +196,6 @@ notify:slack:build-status:
       when: always
     - if: $CI_COMMIT_REF_PROTECTED == "true" && $CI_COMMIT_BRANCH != ""
       when: manual
+      allow_failure: true
   script:
     - deno run --allow-read --allow-net --allow-env scripts/send-slack-notification.ts
