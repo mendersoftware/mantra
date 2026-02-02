@@ -223,12 +223,14 @@ const sendToSlackWithRetry = async (webhookUrl: string, message: SlackMessage, m
   }
 };
 
+const notificationWindowHour = 6;
+
 const isWithinNotificationWindow = (): boolean => {
   const now = new Date();
   const hour = now.getUTCHours();
 
-  // Only run weekdays between 07:00 and 08:00 UTC
-  return hour === 7 && now.getDay() < 6;
+  // Only run weekdays between 07:00 and 08:00 UTC w/ Sunday being day 0
+  return hour === notificationWindowHour && now.getDay() > 0 && now.getDay() < 6;
 };
 
 const buildStatusFiles = ['ui/nightliesBuildStatus.json', 'ui/repoBuildStatus.json'];
@@ -239,13 +241,14 @@ const main = async () => {
 
   if (!isWithinNotificationWindow()) {
     const now = new Date();
-    console.log(
-      `[INFO] Outside notification window (current UTC hour: ${now.getUTCHours()}). Notifications only sent between 09:00-10:00 UTC on weekdays => Exiting!`
-    );
+    console.log(`
+[INFO] Outside notification window (current UTC hour: ${now.getUTCHours()}).
+       Notifications are only sent between 0${notificationWindowHour}:00-${notificationWindowHour + 1}:00 UTC on weekdays.
+       => Exiting!`);
     Deno.exit(0);
   }
 
-  console.log('[INFO] Within notification window (09:00-10:00 UTC), proceeding...');
+  console.log(`[INFO] Within notification window (0${notificationWindowHour}:00-${notificationWindowHour + 1}:00 UTC), proceeding...`);
 
   const webhookUrl = Deno.env.get('SLACK_WEBHOOK_URL');
   if (!webhookUrl) {
