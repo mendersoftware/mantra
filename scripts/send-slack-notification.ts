@@ -237,7 +237,8 @@ const areas = ['nightlies', 'backend', 'client', 'docs', 'qa', 'saas'] as const;
 const main = async () => {
   console.log('[INFO] Starting Slack notification script');
 
-  if (!isWithinNotificationWindow()) {
+  const isManuallyTriggered = Boolean(Deno.env.get('CI_JOB_MANUAL'));
+  if (!isWithinNotificationWindow() && !isManuallyTriggered) {
     const now = new Date();
     console.log(
       `[INFO] Outside notification window (current UTC hour: ${now.getUTCHours()}). Notifications only sent between 09:00-10:00 UTC on weekdays => Exiting!`
