@@ -17,7 +17,6 @@ const areas = {
 };
 
 const repos = [
-  { repo: 'app-update-module', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'grub-mender-grubenv', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'integration-test-runner', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'integration', staging: true, isExecutable: false, isProduct: false, area: areas.qa },
