@@ -263,45 +263,58 @@ const enhanceWithCoverageData = async reposByArea => {
 };
 
 const repoQuery = gql`
-  query getPipeline($login: String!) {
+  query getPipeline($login: String!, $cursor: String) {
     organization(login: $login) {
-      repositories(
-        first: 50
-        isFork: false
-        isLocked: false
-        ownerAffiliations: [OWNER]
-        orderBy: {field: PUSHED_AT, direction: DESC}
-      ) {
+      repositories(first: 10, after: $cursor, isFork: false, isLocked: false, ownerAffiliations: [OWNER], orderBy: { field: PUSHED_AT, direction: DESC }) {
         nodes {
           name
-          pullRequests(states: [OPEN], labels: ["dependencies"], first: 10) {
-            nodes {
-              createdAt
-              url
-            }
+          pullRequests(states: [OPEN], labels: ["dependencies"], first: 1) {
             totalCount
           }
         }
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+        totalCount
       }
     }
   }
 `;
 
+const githubGraphqlUrl = 'https://api.github.com/graphql';
+const githubApiRequestHeaders = { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` };
+
+const getAllRepos = async () => {
+  let allRepos = [];
+  let cursor = null;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const repoState = await request({
+      url: githubGraphqlUrl,
+      variables: { login: 'mendersoftware', cursor },
+      document: repoQuery,
+      requestHeaders: githubApiRequestHeaders
+    });
+    const { organization = { repositories: {} } } = repoState;
+    const {
+      repositories: { nodes, pageInfo, totalCount }
+    } = organization;
+    allRepos = allRepos.concat(nodes);
+    hasNextPage = pageInfo.hasNextPage;
+    cursor = pageInfo.endCursor;
+    console.log(`(BuildStatus): GithubRepoRetrieval has ${allRepos.length} of ${totalCount}`);
+  }
+  return allRepos;
+};
+
 const getGithubOrganizationState = async () => {
   if (!process.env.GITHUB_TOKEN) {
     return { untracked: [], withDependabot: [] };
   }
-  const repoState = await request({
-    url: 'https://api.github.com/graphql',
-    variables: { login: 'mendersoftware' },
-    document: repoQuery,
-    requestHeaders: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
-  });
-  const { organization = { repositories: {} } } = repoState;
-  const {
-    repositories: { nodes }
-  } = organization;
-  return nodes.reduce(
+  const repositories = await getAllRepos();
+  return repositories.reduce(
     (accu, { name, pullRequests }) => {
       const isTrackedHere = repos.some(({ repo }) => repo === name);
       const { totalCount } = pullRequests;
