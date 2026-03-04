@@ -268,7 +268,7 @@ const repoQuery = gql`
       repositories(first: 100) {
         nodes {
           name
-          pullRequests(states: [OPEN], labels: ["dependencies"], first: 50) {
+          pullRequests(states: [OPEN], labels: ["dependencies"], first: 10) {
             nodes {
               createdAt
               url
