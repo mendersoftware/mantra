@@ -265,7 +265,13 @@ const enhanceWithCoverageData = async reposByArea => {
 const repoQuery = gql`
   query getPipeline($login: String!) {
     organization(login: $login) {
-      repositories(first: 50, isFork: false, isLocked: false, ownerAffiliations: [OWNER], orderBy: { field: PUSHED_AT, direction: DESC })
+      repositories(
+        first: 50
+        isFork: false
+        isLocked: false
+        ownerAffiliations: [OWNER]
+        orderBy: {field: PUSHED_AT, direction: DESC}
+      ) {
         nodes {
           name
           pullRequests(states: [OPEN], labels: ["dependencies"], first: 10) {
