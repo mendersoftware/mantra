@@ -151,6 +151,15 @@ Tetra's code should pass the `flake8` style checks. To run these, use tox:
 
     $ tox -e flake8
 
+# Adding new projects to Mantra
+
+After Mantra has been initialized for the 1st time it contains a list of project
+and keys assigned to them. For the initial setup dedicated script is used:
+`scripts/init-tetra-projects.py`
+
+If the list of project needs to be extended - `/api/projects` endpoind need
+to be used again. The easiest way to do it is to modify initial setup script,
+so it will fetch the list of existing projects and add only the missing ones.
 
 # Contributing
 
