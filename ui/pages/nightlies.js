@@ -99,6 +99,11 @@ export const pipelines = [
     pipelineScheduleId: 2766723
   },
   {
+    name: 'Full integration mender-server:4.1.x',
+    projectPath: 'Northern.tech/Mender/integration',
+    pipelineScheduleId: 4188082
+  },
+  {
     name: 'Mender Client Acceptance Tests',
     projectPath: 'Northern.tech/Mender/mender-qa',
     pipelineScheduleId: 30585
@@ -109,9 +114,19 @@ export const pipelines = [
     pipelineScheduleId: 2738797
   },
   {
+    name: 'Integration mender-server-enterprise:4.1.x',
+    projectPath: 'Northern.tech/Mender/mender-server-enterprise',
+    pipelineScheduleId: 4187887
+  },
+  {
     name: 'mender-server',
     projectPath: 'Northern.tech/Mender/mender-server',
     pipelineScheduleId: 2738796
+  },
+  {
+    name: 'Integration mender-server:4.1.x',
+    projectPath: 'Northern.tech/Mender/mender-server',
+    pipelineScheduleId: 4187881
   },
   {
     name: 'mender-gateway:master (w/ client latest)',

@@ -46,9 +46,9 @@ const repos = [
     isExecutable: false,
     isProduct: true,
     area: areas.backend,
-    supportedBranches: ['4.0.x']
+    supportedBranches: ['4.0.x', '4.1.x']
   },
-  { repo: 'mender-server', branches: ['main'], staging: false, isExecutable: false, isProduct: true, area: areas.backend, supportedBranches: ['4.0.x'] },
+  { repo: 'mender-server', branches: ['main'], staging: false, isExecutable: false, isProduct: true, area: areas.backend, supportedBranches: ['4.0.x', '4.1.x'] },
   { repo: 'mender-setup', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'mender-snapshot', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'mender-stress-test-client', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
