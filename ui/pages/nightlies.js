@@ -146,7 +146,7 @@ export const pipelines = [
   {
     name: 'mender-orchestrator',
     projectPath: 'Northern.tech/Mender/mender-orchestrator',
-    pipelineScheduleId: 2758204
+    pipelineScheduleId: 4191389
   }
 ];
 
