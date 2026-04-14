@@ -221,32 +221,27 @@ const getNightlies = async (accu, options = {}, pipeline) => {
   if (!process.env.GITLAB_TOKEN) {
     return [];
   }
-  const { page, limit, cutoffDate, totalPages } = options;
-  const url = [gitlabProjectPipelineBaseUrl, encodeURIComponent(pipeline.projectPath), 'pipeline_schedules', pipeline.pipelineScheduleId, 'pipelines'].join(
-    '/'
-  );
+  const { page, limit, cutoffDate, totalPages, url } = options;
   const response = await fetch(`${url}?sort=desc&per_page=${gitlabPaginationLimit}&page=${page}`, gitlabApiRequestHeaders);
   const result = await response.json();
-  console.log(`(${pipeline.name}): gotten ${result.length} pipelines of ${limit}`);
   const pipelinesFiltered = result.filter(obj => new Date(obj.created_at).setHours(0, 0, 0, 0) >= cutoffDate);
   const pipelines = [...accu, ...pipelinesFiltered];
+  console.log(`(${pipeline.name}): gotten ${pipelines.length} pipelines of ${limit} - page: ${page}/${totalPages}`);
   if (page + 1 <= totalPages && pipelines.length < limit) {
-    return getNightlies(pipelines, { page: Math.min(totalPages, page + 1), limit, cutoffDate, totalPages }, pipeline);
+    return getNightlies(pipelines, { page: Math.min(totalPages, page + 1), limit, cutoffDate, totalPages, url }, pipeline);
   }
   return pipelines.slice(0, limit);
 };
 
 export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
   cutoffDate.setHours(0, 0, 0, 0);
+  const url = `${gitlabProjectPipelineBaseUrl}/${encodeURIComponent(pipeline.projectPath)}/pipeline_schedules/${pipeline.pipelineScheduleId}/pipelines`;
   // Ideally, we would order by started date (desc) GitLab API does not support this, so the workaround is to paginate
   // until we collect pipelines, filter by `cutoffDate` and recurse backwards until we have reached `limit` filtered nightlies
-  const canaryResponse = await fetch(
-    `${gitlabProjectPipelineBaseUrl}/${encodeURIComponent(pipeline.projectPath)}/pipeline_schedules/${pipeline.pipelineScheduleId}/pipelines?per_page=1`,
-    gitlabApiRequestHeaders
-  );
+  const canaryResponse = await fetch(`${url}?sort=desc&per_page=1`, gitlabApiRequestHeaders);
   const totalPipelines = await canaryResponse.headers.get('x-total');
   console.log(`(${pipeline.name}): will at most go through ${totalPipelines} pipelines`);
-  const pipelines = await getNightlies([], { cutoffDate, limit, page: 1, totalPages: Math.ceil(totalPipelines / gitlabPaginationLimit) }, pipeline);
+  const pipelines = await getNightlies([], { cutoffDate, limit, page: 1, totalPages: Math.ceil(totalPipelines / gitlabPaginationLimit), url }, pipeline);
 
   // Now get the test report summary of each pipeline and construct the final objects to return
   return Promise.all(
@@ -341,13 +336,11 @@ const emptyBuildStatusItem = {
 export async function getStaticProps() {
   const nightlies = {};
   const nightliesArr = [];
-  const pipelineFetch = pipelines.map(async pipeline => {
+  for (const pipeline of pipelines) {
     const [mixed, plain] = await getNightliesByPipeline(pipeline);
     nightlies[pipeline.name] = mixed;
     nightliesArr.push({ data: plain, name: pipeline.name });
-    return nightlies[pipeline.name];
-  });
-  await Promise.all(pipelineFetch);
+  }
   const flatNightlies = sortByNamesOrder(mergeByDate(nightliesArr));
 
   const nightliesBuilds = Object.values(flatNightlies[0]).map(({ buildStatus }) => ({
