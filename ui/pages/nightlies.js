@@ -114,7 +114,7 @@ export const pipelines = [
     pipelineScheduleId: 2738797
   },
   {
-    name: 'Integration mender-server-enterprise:4.1.x',
+    name: 'mender-server-enterprise:4.1.x',
     projectPath: 'Northern.tech/Mender/mender-server-enterprise',
     pipelineScheduleId: 4187887
   },
@@ -124,7 +124,7 @@ export const pipelines = [
     pipelineScheduleId: 2738796
   },
   {
-    name: 'Integration mender-server:4.1.x',
+    name: 'mender-server:4.1.x',
     projectPath: 'Northern.tech/Mender/mender-server',
     pipelineScheduleId: 4187881
   },
