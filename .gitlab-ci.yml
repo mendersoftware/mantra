@@ -109,7 +109,7 @@ build:docker:ui:
     - docker build
       --secret id=aws_access_key_id,env=AWS_ACCESS_KEY_ID
       --secret id=aws_secret_access_key,env=AWS_SECRET_ACCESS_KEY
-      --secret id=gitlab_token,env=GITLAB_TOKEN
+      --secret id=gitlab_token,env=GITLAB_TOKEN_MANTRA
       --secret id=github_token,env=GITHUB_BOT_TOKEN_REPO_FULL
       --tag $DOCKER_BUILD_SERVICE_IMAGE
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
@@ -119,7 +119,7 @@ build:docker:ui:
     - docker build
       --secret id=aws_access_key_id,env=AWS_ACCESS_KEY_ID
       --secret id=aws_secret_access_key,env=AWS_SECRET_ACCESS_KEY
-      --secret id=gitlab_token,env=GITLAB_TOKEN
+      --secret id=gitlab_token,env=GITLAB_TOKEN_MANTRA
       --secret id=github_token,env=GITHUB_BOT_TOKEN_REPO_FULL
       --target builder
       --tag ${DOCKER_BUILD_SERVICE_IMAGE}-builder
