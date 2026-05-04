@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import { CalendarMonth as CalendarMonthIcon, FormatListBulleted as FormatListBulletedIcon } from '@mui/icons-material';
 import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 
 import dayjs from 'dayjs';
@@ -21,7 +20,7 @@ const Nightlies = props => {
   return (
     <>
       <Typography variant="h4">Mender Nightlies Tests</Typography>
-      <Box display="flex" justifyContent="space-between" sx={{ mt: 2, mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, mb: 2 }}>
         <Box>
           <ToggleButtonGroup value={calendarView} exclusive onChange={handleCalendarView}>
             <ToggleButton value={true}>

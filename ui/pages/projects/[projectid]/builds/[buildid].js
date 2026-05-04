@@ -59,7 +59,7 @@ const ResultsView = () => {
       <Typography variant="h4">Results</Typography>
       <Typography variant="h6">Summary</Typography>
       <ResultsMetadata metadata={metadata} />
-      <Stack direction="row" justifyContent="space-between">
+      <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
         <Typography variant="h6">All results</Typography>
         <Stack direction="row" spacing={2}>
           <Button variant="outlined" disabled={!canPageBackward} startIcon={<ArrowBackIcon />} onClick={offsetDecrease}>

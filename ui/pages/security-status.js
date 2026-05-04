@@ -87,7 +87,7 @@ const SecurityStatus = ({ results }) => {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Typography marginBottom={2} variant="h4">
+        <Typography variant="h4" sx={{ marginBottom: 2 }}>
           Security Status
         </Typography>
         <FormControlLabel control={<Switch checked={isFiltered} onChange={handleChange} color="primary" />} label="Filter images" labelPlacement="start" />

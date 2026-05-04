@@ -11,7 +11,7 @@ const legendItems = [
 export const Legend = () => (
   <Box>
     {legendItems.map(item => (
-      <Box key={item.title} display="flex">
+      <Box key={item.title} sx={{ display: 'flex' }}>
         {item.icon || <Circle color={item.color} />}
         <Typography sx={{ ml: 1 }}> {item.title}</Typography>
       </Box>

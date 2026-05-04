@@ -15,7 +15,7 @@ const ProjectsView = () => {
 
   return (
     <>
-      <Typography marginBottom={2} variant="h4">
+      <Typography variant="h4" sx={{ marginBottom: 2 }}>
         Projects
       </Typography>
       <ResourceTable resources={projects} type="projects" />

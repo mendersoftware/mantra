@@ -70,7 +70,7 @@ const defaultBranches = ['master'];
 const minWidth = { style: { minWidth: 110 } };
 const CoverageDisplay = ({ coverage }) =>
   !!coverage && coverage !== 'unknown' ? (
-    <Typography color="text.disabled" {...minWidth}>
+    <Typography {...minWidth} sx={{ color: 'text.disabled' }}>
       Coverage: {coverage}%
     </Typography>
   ) : (
@@ -78,8 +78,8 @@ const CoverageDisplay = ({ coverage }) =>
   );
 
 const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', coverage, buildStatus, dependabotPendings }) => (
-  <Stack direction="row" justifyContent="space-between">
-    <Stack direction="row" alignContent="center" spacing={2}>
+  <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
+    <Stack direction="row" spacing={2} sx={{ alignContent: 'center' }}>
       <Link href={`https://gitlab.com/Northern.tech/${organization}/${repo}/-/pipelines?ref=${branch}`}>
         {mainBranches.includes(branch) && buildStatus ? (
           <Circle color={buildStatusColor(buildStatus.status)} />
@@ -93,7 +93,7 @@ const RepoStatusItem = ({ repo, organization = 'Mender', branch = 'master', cove
         </Typography>
       </Link>
     </Stack>
-    <Stack direction="row" alignItems="center" spacing={2.5}>
+    <Stack direction="row" spacing={2.5} sx={{ alignItems: 'center' }}>
       {!!dependabotPendings && (
         <Link
           href={`https://github.com/mendersoftware/${repo}/pulls`}
@@ -115,17 +115,16 @@ const BuildStatus = ({ componentsByArea, supported, untracked }) => {
   const { total, ...components } = componentsByArea;
   return (
     <>
-      <Stack direction="row" justifyContent="space-between" marginBottom={2}>
+      <Stack direction="row" sx={{ justifyContent: 'space-between', marginBottom: 2 }}>
         <Typography variant="h4">Build Status</Typography>
-        <Stack direction="row" alignItems="center" spacing={2}>
+        <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
           <CoverageDisplay coverage={total.coverage} />
         </Stack>
       </Stack>
-
       {Object.entries(components).map(([area, component]) => (
         <Accordion key={area} defaultExpanded disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />} id={area}>
-            <Stack direction="row" justifyContent="space-between" flexGrow={1}>
+            <Stack direction="row" sx={{ justifyContent: 'space-between', flexGrow: 1 }}>
               {area}
               <CoverageDisplay coverage={component.coverage} />
             </Stack>
@@ -147,7 +146,6 @@ const BuildStatus = ({ componentsByArea, supported, untracked }) => {
           </AccordionDetails>
         </Accordion>
       ))}
-
       <Accordion defaultExpanded disableGutters>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} id="supported-components">
           <Typography variant="h6">Supported Component Versions</Typography>
