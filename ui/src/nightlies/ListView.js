@@ -29,16 +29,16 @@ export const PipelineListView = props => {
             return (
               <React.Fragment key={date.getMonth()}>
                 <Typography variant="h6">{date.toLocaleString('default', { month: 'long' })}</Typography>
-                <Grid container direction="row" justifyContent="flex-start" alignItems="flex-start">
+                <Grid container direction="row" sx={{ justifyContent: 'flex-start', alignItems: 'flex-start' }}>
                   {monthlyNightlies.map(item => (
-                    <Stack key={item.path} alignItems="center">
+                    <Stack key={item.path} sx={{ alignItems: 'center' }}>
                       <Tooltip
                         arrow
                         title={
                           <>
                             {new Date(item.startedAt).toLocaleString()}
                             {Object.entries(item.testReportSummary.total).map(([name, value]) => (
-                              <Stack direction="row" justifyContent="space-between" key={name}>
+                              <Stack direction="row" key={name} sx={{ justifyContent: 'space-between' }}>
                                 <b>{name}</b>
                                 <div>{Math.ceil(value)}</div>
                               </Stack>

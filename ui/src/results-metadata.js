@@ -1,9 +1,9 @@
 import { Stack } from '@mui/material';
 
 const ResultsMetadata = ({ metadata }) => (
-  <Stack marginTop={2} marginBottom={2} style={{ maxWidth: 200 }}>
+  <Stack style={{ maxWidth: 200 }} sx={{ marginTop: 2, marginBottom: 2 }}>
     {Object.entries(metadata).map(([key, value], index) => (
-      <Stack direction="row" key={index} justifyContent="space-between">
+      <Stack direction="row" key={index} sx={{ justifyContent: 'space-between' }}>
         <b>{key}</b>
         <div>{value}</div>
       </Stack>

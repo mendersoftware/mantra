@@ -6,7 +6,7 @@ import { buildStatusColor } from '../constants';
 export const Dot = props => {
   const { item } = props;
   return (
-    <Stack key={item.path} alignItems="center" sx={{ position: 'relative' }}>
+    <Stack key={item.path} sx={{ alignItems: 'center', position: 'relative' }}>
       <Tooltip
         arrow
         title={
@@ -14,13 +14,13 @@ export const Dot = props => {
             <div style={{ fontSize: '16px' }}>{item.name}</div>
             {new Date(item.startedAt).toLocaleString()}
             {Object.entries(item.testReportSummary.total).map(([name, value]) => (
-              <Stack direction="row" justifyContent="space-between" key={name}>
+              <Stack direction="row" key={name} sx={{ justifyContent: 'space-between' }}>
                 <b>{name}</b>
                 <div>{Math.ceil(value)}</div>
               </Stack>
             ))}
             {item.hasRetries && (
-              <Stack direction="row" justifyContent="space-between">
+              <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
                 <b>Jobs retried</b>
                 <div>{item.retriedJobCount}</div>
               </Stack>

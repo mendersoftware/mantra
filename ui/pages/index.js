@@ -3,8 +3,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 import BuildStatus from './build-status';
-import ProjectsView from './projects';
 import Nightlies from './nightlies';
+import ProjectsView from './projects';
 import SecurityStatus from './security-status';
 import Stats from './stats';
 

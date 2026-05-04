@@ -177,7 +177,7 @@ const ResourceTable = ({ resources, type, tableSlots }) => {
   }
 
   return (
-    <Box display="flex" flexDirection="column">
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       <DataGrid
         showQuickFilter
         initialState={initialState}

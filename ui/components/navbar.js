@@ -34,8 +34,8 @@ export const Navbar = () => {
   return (
     <AppBar position="static">
       <Toolbar>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" flexGrow={1}>
-          <Typography variant="h6" component={Link} href="/" color="inherit">
+        <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between', flexGrow: 1 }}>
+          <Typography variant="h6" component={Link} href="/" sx={{ color: 'inherit' }}>
             Mantra
           </Typography>
           <Tabs value={tabValue} onChange={handleTabChange} color="inherit" textColor="inherit">
