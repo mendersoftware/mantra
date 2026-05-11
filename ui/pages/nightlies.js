@@ -146,6 +146,11 @@ export const pipelines = [
     name: 'mender-orchestrator',
     projectPath: 'Northern.tech/Mender/mender-orchestrator',
     pipelineScheduleId: 4191389
+  },
+  {
+    name: 'mender-mcu-integration',
+    projectPath: 'Northern.tech/Mender/mender-mcu-integration',
+    pipelineScheduleId: 2681340
   }
 ];
 
