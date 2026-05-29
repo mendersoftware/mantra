@@ -262,11 +262,11 @@ export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
         path: obj.web_url.replace(/^https:\/\/gitlab.com/, ''),
         status: obj.status.toUpperCase(),
         startedAt: obj.created_at,
-        testReportSummary: details.testReportSummary,
-        hasRetries: details.hasRetries,
-        retriedJobCount: details.retriedJobCount,
+        testReportSummary: details?.testReportSummary,
+        hasRetries: details?.hasRetries,
+        retriedJobCount: details?.retriedJobCount,
         shiftedDate,
-        buildStatus: details.buildStatus
+        buildStatus: details?.buildStatus
       };
     })
   );
