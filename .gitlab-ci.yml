@@ -107,8 +107,8 @@ build:docker:ui:
   script:
     - echo "building ${CI_PROJECT_NAME} for ${DOCKER_BUILD_SERVICE_IMAGE}"
     - docker build
-      --secret id=aws_access_key_id,env=AWS_ACCESS_KEY_ID
-      --secret id=aws_secret_access_key,env=AWS_SECRET_ACCESS_KEY
+      --secret id=aws_access_key_id,env=S3_UPLOAD_AWS_ACCESS_KEY_ID
+      --secret id=aws_secret_access_key,env=S3_UPLOAD_AWS_SECRET_ACCESS_KEY
       --secret id=gitlab_token,env=GITLAB_TOKEN_MANTRA
       --secret id=github_token,env=GITHUB_BOT_TOKEN_REPO_FULL
       --tag $DOCKER_BUILD_SERVICE_IMAGE
@@ -117,8 +117,8 @@ build:docker:ui:
     - docker save $DOCKER_BUILD_SERVICE_IMAGE > image.tar
     - echo "extracting repoBuildStatus.json from builder stage"
     - docker build
-      --secret id=aws_access_key_id,env=AWS_ACCESS_KEY_ID
-      --secret id=aws_secret_access_key,env=AWS_SECRET_ACCESS_KEY
+      --secret id=aws_access_key_id,env=S3_UPLOAD_AWS_ACCESS_KEY_ID
+      --secret id=aws_secret_access_key,env=S3_UPLOAD_AWS_SECRET_ACCESS_KEY
       --secret id=gitlab_token,env=GITLAB_TOKEN_MANTRA
       --secret id=github_token,env=GITHUB_BOT_TOKEN_REPO_FULL
       --target builder
