@@ -138,6 +138,11 @@ export const pipelines = [
     pipelineScheduleId: 2874911
   },
   {
+    name: 'mender-gateway:2.1.x (w/ client latest)',
+    projectPath: 'Northern.tech/Mender/mender-gateway',
+    pipelineScheduleId: 4298928
+  },
+  {
     name: 'mender-gateway:master (w/ client master)',
     projectPath: 'Northern.tech/Mender/mender-gateway',
     pipelineScheduleId: 4022183
