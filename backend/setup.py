@@ -1,5 +1,4 @@
 from setuptools import setup
-
 setup_params = dict(
     name="tetra",
     version="0.0.1",
