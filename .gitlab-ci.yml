@@ -42,6 +42,11 @@ publish:image:mender:
   rules:
     - when: never
 
+# Disable non-multiplatform job
+build:docker:
+  rules:
+    - when: never
+
 test:check-python3-formatting:
   stage: test
   needs: []
@@ -70,7 +75,7 @@ test:backend-unit:
     - gunicorn -t 120 --daemon --bind 127.0.0.1:7374 --access-logfile - tetra.app:application
     - TOXENV=functional tox
 
-build:docker:
+build:docker-multiplatform:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     DOCKER_DIR: backend
@@ -88,7 +93,7 @@ build:docker:
   tags:
     - k8s
 
-publish:image:
+publish:image-multiplatform:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     DOCKER_DIR: backend
@@ -98,8 +103,8 @@ sync:image:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     TARGET_MANIFEST_FILE: kubernetes/mender-qastatus/api-deployment.yaml
 
-build:docker:ui:
-  extends: build:docker
+build:docker-multiplatform:ui:
+  extends: build:docker-multiplatform
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     DOCKER_DIR: ui
@@ -148,9 +153,9 @@ test:composition:
   stage: acceptance_tests
   image: docker:29-cli
   needs:
-    - job: build:docker
+    - job: build:docker-multiplatform
       artifacts: true
-    - job: build:docker:ui
+    - job: build:docker-multiplatform:ui
       artifacts: true
   services:
     - docker:29-dind
@@ -168,10 +173,10 @@ test:composition:
     - cd backend
     - TOXENV=functional tox
 
-publish:image:ui:
-  extends: publish:image
+publish:image-multiplatform:ui:
+  extends: publish:image-multiplatform
   dependencies:
-    - build:docker:ui
+    - build:docker-multiplatform:ui
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     DOCKER_DIR: ui
@@ -179,7 +184,7 @@ publish:image:ui:
 sync:image:ui:
   extends: sync:image
   dependencies:
-    - publish:image:ui
+    - publish:image-multiplatform:ui
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     TARGET_MANIFEST_FILE: kubernetes/mender-qastatus/ui-deployment.yaml
@@ -188,7 +193,7 @@ notify:slack:build-status:
   stage: publish
   image: denoland/deno:alpine
   needs:
-    - job: build:docker:ui
+    - job: build:docker-multiplatform:ui
       artifacts: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
