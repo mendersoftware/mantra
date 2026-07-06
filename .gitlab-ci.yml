@@ -37,8 +37,31 @@ default:
       - runner_system_failure
       - stuck_or_timeout_failure
 
+# excludes non multiplatform build job
+build:docker:
+  script:
+    - echo "Job disabled"
+  rules:
+    - when: never
+
+# excludes non multiplatform build job
+publish:image:
+  script:
+    - echo "Job disabled"
+  rules:
+    - when: never
+
 # Disable Mender specific job
 publish:image:mender:
+  script:
+    - echo "Job disabled"
+  rules:
+    - when: never
+
+# excludes non multiplatform build job
+publish:image:saas:
+  script:
+    - echo "Job disabled"
   rules:
     - when: never
 
@@ -70,16 +93,16 @@ test:backend-unit:
     - gunicorn -t 120 --daemon --bind 127.0.0.1:7374 --access-logfile - tetra.app:application
     - TOXENV=functional tox
 
-build:docker:
+build:docker-multiplatform:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     DOCKER_DIR: backend
   after_script:
-    - cp image.tar image-api.tar
+    - docker buildx build --tag $DOCKER_BUILD_SERVICE_IMAGE --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile} --load ${DOCKER_DIR:-.}
+    - docker save $DOCKER_BUILD_SERVICE_IMAGE > image-api.tar
   artifacts:
     expire_in: 2w
     paths:
-      - image.tar
       - image-api.tar
   rules:
     - if: $CI_COMMIT_REF_NAME == "master"
@@ -88,7 +111,7 @@ build:docker:
   tags:
     - k8s
 
-publish:image:
+publish:image-multiplatform:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     DOCKER_DIR: backend
@@ -98,24 +121,23 @@ sync:image:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     TARGET_MANIFEST_FILE: kubernetes/mender-qastatus/api-deployment.yaml
 
-build:docker:ui:
-  extends: build:docker
+build:docker-multiplatform:ui:
+  extends: build:docker-multiplatform
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     DOCKER_DIR: ui
-  script:
-    - echo "building ${CI_PROJECT_NAME} for ${DOCKER_BUILD_SERVICE_IMAGE}"
-    - docker build
+    EXTRA_DOCKER_ARGS: >
       --secret id=aws_access_key_id,env=S3_UPLOAD_AWS_ACCESS_KEY_ID
       --secret id=aws_secret_access_key,env=S3_UPLOAD_AWS_SECRET_ACCESS_KEY
       --secret id=gitlab_token,env=GITLAB_TOKEN_MANTRA
       --secret id=github_token,env=GITHUB_BOT_TOKEN_REPO_FULL
-      --tag $DOCKER_BUILD_SERVICE_IMAGE
-      --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
-      ${DOCKER_DIR:-.}
-    - docker save $DOCKER_BUILD_SERVICE_IMAGE > image.tar
-    - echo "extracting repoBuildStatus.json from builder stage"
-    - docker build
+  script:
+    - echo "Building ${CI_PROJECT_NAME} for ${DOCKER_BUILD_SERVICE_IMAGE}"
+
+    - !reference [build:docker-multiplatform, script]
+
+    - echo "Extracting from builder stage..."
+    - docker buildx build
       --secret id=aws_access_key_id,env=S3_UPLOAD_AWS_ACCESS_KEY_ID
       --secret id=aws_secret_access_key,env=S3_UPLOAD_AWS_SECRET_ACCESS_KEY
       --secret id=gitlab_token,env=GITLAB_TOKEN_MANTRA
@@ -123,12 +145,17 @@ build:docker:ui:
       --target builder
       --tag ${DOCKER_BUILD_SERVICE_IMAGE}-builder
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
+      --load
       ${DOCKER_DIR:-.}
+
     - CONTAINER_ID=$(docker create ${DOCKER_BUILD_SERVICE_IMAGE}-builder)
-    - docker cp ${CONTAINER_ID}:/work/responses ui/responses/
-    - docker cp ${CONTAINER_ID}:/work/repoBuildStatus.json ui/repoBuildStatus.json
-    - docker cp ${CONTAINER_ID}:/work/nightliesBuildStatus.json ui/nightliesBuildStatus.json
+    - docker cp ${CONTAINER_ID}:/work/responses ui/responses/ || true
+    - docker cp ${CONTAINER_ID}:/work/repoBuildStatus.json ui/repoBuildStatus.json || true
+    - docker cp ${CONTAINER_ID}:/work/nightliesBuildStatus.json ui/nightliesBuildStatus.json || true
     - docker rm ${CONTAINER_ID}
+
+    - docker buildx build --tag $DOCKER_BUILD_SERVICE_IMAGE --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile} --load ${DOCKER_DIR:-.}
+    - docker save $DOCKER_BUILD_SERVICE_IMAGE > image.tar
   after_script:
     - cp image.tar image-ui.tar
   artifacts:
@@ -148,17 +175,27 @@ test:composition:
   stage: acceptance_tests
   image: docker:29-cli
   needs:
-    - job: build:docker
+    - job: build:docker-multiplatform
       artifacts: true
-    - job: build:docker:ui
+      optional: true
+    - job: build:docker-multiplatform:ui
       artifacts: true
+      optional: true
   services:
     - docker:29-dind
   before_script:
-    - docker load -i image-api.tar
-    - docker tag mendersoftware/mantra-api:${CI_COMMIT_REF_SLUG} mendersoftware/mantra-api:pr
-    - docker load -i image-ui.tar
-    - docker tag mendersoftware/mantra-ui:${CI_COMMIT_REF_SLUG} mendersoftware/mantra-ui:pr
+    - if [ -f image-api.tar ]; then
+        docker load -i image-api.tar && docker tag mendersoftware/mantra-api:${CI_COMMIT_REF_SLUG} mendersoftware/mantra-api:pr;
+      else
+        docker pull mendersoftware/mantra-api:master && docker tag mendersoftware/mantra-api:master mendersoftware/mantra-api:pr;
+      fi
+
+    - if [ -f image-ui.tar ]; then
+        docker load -i image-ui.tar && docker tag mendersoftware/mantra-ui:${CI_COMMIT_REF_SLUG} mendersoftware/mantra-ui:pr;
+      else
+        docker pull mendersoftware/mantra-ui:master && docker tag mendersoftware/mantra-ui:master mendersoftware/mantra-ui:pr;
+      fi
+
     - apk add --no-cache python3 py3-pip py3-tox
     - echo $'[api]\nbase_url = http://test:test@docker/api' > backend/tetra-test.conf
   script:
@@ -168,10 +205,10 @@ test:composition:
     - cd backend
     - TOXENV=functional tox
 
-publish:image:ui:
-  extends: publish:image
+publish:image-multiplatform:ui:
+  extends: publish:image-multiplatform
   dependencies:
-    - build:docker:ui
+    - build:docker-multiplatform:ui
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     DOCKER_DIR: ui
@@ -179,7 +216,7 @@ publish:image:ui:
 sync:image:ui:
   extends: sync:image
   dependencies:
-    - publish:image:ui
+    - publish:image-multiplatform:ui
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     TARGET_MANIFEST_FILE: kubernetes/mender-qastatus/ui-deployment.yaml
@@ -188,7 +225,7 @@ notify:slack:build-status:
   stage: publish
   image: denoland/deno:alpine
   needs:
-    - job: build:docker:ui
+    - job: build:docker-multiplatform:ui
       artifacts: true
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"

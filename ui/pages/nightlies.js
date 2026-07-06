@@ -352,7 +352,7 @@ export async function getStaticProps() {
   }
   const flatNightlies = sortByNamesOrder(mergeByDate(nightliesArr));
 
-  const nightliesBuilds = Object.values(flatNightlies[0]).map(({ buildStatus }) => ({
+  const nightliesBuilds = Object.values(flatNightlies[0] || {}).map(({ buildStatus }) => ({
     ...emptyBuildStatusItem,
     repo: buildStatus.name,
     buildStatus
