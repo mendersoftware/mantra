@@ -60,6 +60,12 @@ publish:image:mender:
   rules:
     - when: never
 
+publish:image-multiplatform:mender:
+  script:
+    - echo "Job disabled"
+  rules:
+    - when: never
+
 # excludes non multiplatform build job
 publish:image:saas:
   script:
@@ -99,13 +105,7 @@ build:docker-multiplatform:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     DOCKER_DIR: backend
-  after_script:
-    - docker buildx build --tag $DOCKER_BUILD_SERVICE_IMAGE --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile} --load ${DOCKER_DIR:-.}
-    - docker save $DOCKER_BUILD_SERVICE_IMAGE > image-api.tar
-  artifacts:
-    expire_in: 2w
-    paths:
-      - image-api.tar
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/api:${CI_PIPELINE_ID}'
   rules:
     - if: $CI_COMMIT_REF_NAME == "master"
     - changes:
@@ -117,6 +117,7 @@ publish:image-multiplatform:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     DOCKER_DIR: backend
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/api:${CI_PIPELINE_ID}'
 
 sync:image:
   variables:
@@ -128,6 +129,7 @@ build:docker-multiplatform:ui:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     DOCKER_DIR: ui
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/ui:${CI_PIPELINE_ID}'
     EXTRA_DOCKER_ARGS: >
       --secret id=aws_access_key_id,env=S3_UPLOAD_AWS_ACCESS_KEY_ID
       --secret id=aws_secret_access_key,env=S3_UPLOAD_AWS_SECRET_ACCESS_KEY
@@ -155,16 +157,9 @@ build:docker-multiplatform:ui:
     - docker cp ${CONTAINER_ID}:/work/repoBuildStatus.json ui/repoBuildStatus.json || true
     - docker cp ${CONTAINER_ID}:/work/nightliesBuildStatus.json ui/nightliesBuildStatus.json || true
     - docker rm ${CONTAINER_ID}
-
-    - docker buildx build --tag $DOCKER_BUILD_SERVICE_IMAGE --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile} --load ${DOCKER_DIR:-.}
-    - docker save $DOCKER_BUILD_SERVICE_IMAGE > image.tar
-  after_script:
-    - cp image.tar image-ui.tar
   artifacts:
     expire_in: 2w
     paths:
-      - image.tar
-      - image-ui.tar
       - ui/responses/
       - ui/repoBuildStatus.json
       - ui/nightliesBuildStatus.json
@@ -178,22 +173,23 @@ test:composition:
   image: docker:29-cli
   needs:
     - job: build:docker-multiplatform
-      artifacts: true
+      artifacts: false
       optional: true
     - job: build:docker-multiplatform:ui
-      artifacts: true
+      artifacts: false
       optional: true
   services:
     - docker:29-dind
   before_script:
-    - if [ -f image-api.tar ]; then
-        docker load -i image-api.tar && docker tag mendersoftware/mantra-api:${CI_COMMIT_REF_SLUG} mendersoftware/mantra-api:pr;
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - if docker pull ${CI_REGISTRY_IMAGE}/api:${CI_PIPELINE_ID}; then
+        docker tag ${CI_REGISTRY_IMAGE}/api:${CI_PIPELINE_ID} mendersoftware/mantra-api:pr;
       else
         docker pull mendersoftware/mantra-api:master && docker tag mendersoftware/mantra-api:master mendersoftware/mantra-api:pr;
       fi
 
-    - if [ -f image-ui.tar ]; then
-        docker load -i image-ui.tar && docker tag mendersoftware/mantra-ui:${CI_COMMIT_REF_SLUG} mendersoftware/mantra-ui:pr;
+    - if docker pull ${CI_REGISTRY_IMAGE}/ui:${CI_PIPELINE_ID}; then
+        docker tag ${CI_REGISTRY_IMAGE}/ui:${CI_PIPELINE_ID} mendersoftware/mantra-ui:pr;
       else
         docker pull mendersoftware/mantra-ui:master && docker tag mendersoftware/mantra-ui:master mendersoftware/mantra-ui:pr;
       fi
@@ -214,6 +210,7 @@ publish:image-multiplatform:ui:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     DOCKER_DIR: ui
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/ui:${CI_PIPELINE_ID}'
 
 sync:image:ui:
   extends: sync:image
