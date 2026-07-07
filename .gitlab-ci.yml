@@ -1,4 +1,6 @@
 variables:
+  MULTIPLATFORM_BUILD: "true"
+  MULTIPLATFORM_PLATFORMS: "linux/amd64"
   DOCKER_HOST:
     value: "tcp://docker:2376"
     description: "Required to run dind inside k8s runners with TLS"
