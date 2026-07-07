@@ -105,6 +105,7 @@ build:docker-multiplatform:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     DOCKER_DIR: backend
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/api:${CI_PIPELINE_ID}'
   after_script:
     - docker buildx build --tag $DOCKER_BUILD_SERVICE_IMAGE --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile} --load ${DOCKER_DIR:-.}
     - docker save $DOCKER_BUILD_SERVICE_IMAGE > image-api.tar
@@ -123,6 +124,7 @@ publish:image-multiplatform:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     DOCKER_DIR: backend
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/api:${CI_PIPELINE_ID}'
 
 sync:image:
   variables:
@@ -134,6 +136,7 @@ build:docker-multiplatform:ui:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     DOCKER_DIR: ui
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/ui:${CI_PIPELINE_ID}'
     EXTRA_DOCKER_ARGS: >
       --secret id=aws_access_key_id,env=S3_UPLOAD_AWS_ACCESS_KEY_ID
       --secret id=aws_secret_access_key,env=S3_UPLOAD_AWS_SECRET_ACCESS_KEY
@@ -220,6 +223,7 @@ publish:image-multiplatform:ui:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     DOCKER_DIR: ui
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/ui:${CI_PIPELINE_ID}'
 
 sync:image:ui:
   extends: sync:image
