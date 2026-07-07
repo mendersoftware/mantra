@@ -60,6 +60,12 @@ publish:image:mender:
   rules:
     - when: never
 
+publish:image-multiplatform:mender:
+  script:
+    - echo "Job disabled"
+  rules:
+    - when: never
+
 # excludes non multiplatform build job
 publish:image:saas:
   script:
