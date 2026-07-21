@@ -3,10 +3,11 @@ import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from
 
 import { existsSync } from 'fs';
 import fs from 'fs/promises';
-import { gql, request } from 'graphql-request';
+import { gql } from 'graphql-request';
 
 import Link from '../components/link';
 import { buildStatusColor } from '../src/constants';
+import { requestWithRetry } from '../src/graphql';
 
 const areas = {
   backend: 'backend',
@@ -289,7 +290,7 @@ const getAllRepos = async () => {
   let hasNextPage = true;
 
   while (hasNextPage) {
-    const repoState = await request({
+    const repoState = await requestWithRetry({
       url: githubGraphqlUrl,
       variables: { login: 'mendersoftware', cursor },
       document: repoQuery,
@@ -374,7 +375,7 @@ const getAllProjects = async (group, ref) => {
   let hasNextPage = true;
 
   while (hasNextPage) {
-    const data = await request({
+    const data = await requestWithRetry({
       url: gitlabGraphqlUrl,
       document: pipelineQuery,
       variables: { group: `Northern.tech/${group}`, ref, cursor },

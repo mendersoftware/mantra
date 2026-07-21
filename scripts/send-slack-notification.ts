@@ -73,13 +73,15 @@ interface SlackMessage {
   blocks: SlackBlock[];
 }
 
-const loadRepoStatus = async (filePath: string): Promise<RepoStatusFile> => {
+// a missing or malformed file means the ui build that produces it failed - report on whatever else we do have
+// instead of losing the entire status update over it
+const loadRepoStatus = async (filePath: string): Promise<RepoStatusFile | null> => {
   try {
     const data = await Deno.readTextFile(filePath);
     return JSON.parse(data);
   } catch (error) {
-    console.error('[ERROR] Failed to parse repoStatus:', error);
-    throw error;
+    console.error(`[ERROR] Failed to load ${filePath}:`, error);
+    return null;
   }
 };
 
@@ -256,14 +258,30 @@ const main = async () => {
     console.error('[ERROR] SLACK_WEBHOOK_URL environment variable not set');
     Deno.exit(1);
   }
-  const today = new Intl.DateTimeFormat('nb-NO', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-  await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'header', text: { type: 'plain_text', text: `Build Status - ${today}` } }] });
+  // gather everything up front, so we only announce a build status we can actually follow up on
+  const loadedFiles = await Promise.all(buildStatusFiles.map(async filePath => ({ filePath, data: await loadRepoStatus(filePath) })));
+  const missingFiles = loadedFiles.filter(({ data }) => !data).map(({ filePath }) => filePath);
+  const availableFiles = loadedFiles.filter(({ data }) => !!data);
 
-  for (const filePath of buildStatusFiles) {
-    const data = await loadRepoStatus(filePath);
+  const today = new Intl.DateTimeFormat('nb-NO', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const header: SlackBlock = { type: 'header', text: { type: 'plain_text', text: `Build Status - ${today}` } };
+  const pipelineUrl = Deno.env.get('CI_PIPELINE_URL');
+  const pipelineLink = pipelineUrl ? ` <${pipelineUrl}|Pipeline>` : '';
+
+  // say so rather than going quiet - a missing report is easily mistaken for everything being fine
+  if (!availableFiles.length) {
+    console.error('[ERROR] None of the build status files could be read');
+    const text = `🚨 *No build status to report.* The ui build did not produce ${missingFiles.join(' or ')}, so there is nothing to check against.${pipelineLink}`;
+    await sendToSlackWithRetry(webhookUrl, { blocks: [header, { type: 'section', text: { type: 'mrkdwn', text } }] });
+    Deno.exit(1);
+  }
+
+  await sendToSlackWithRetry(webhookUrl, { blocks: [header] });
+
+  for (const { data } of availableFiles) {
     for (const [index, areaName] of areas.entries()) {
-      const area = data[areaName]!;
-      if (!area) {
+      const area = data![areaName] as AreaData;
+      if (!area?.repos?.length) {
         continue;
       }
       console.log(`\n[INFO] Processing ${areaName} area`);
@@ -277,8 +295,18 @@ const main = async () => {
     }
   }
 
+  if (missingFiles.length) {
+    const text = `⚠️ *This report is incomplete.* No data for ${missingFiles.join(', ')}, the ui build likely failed.${pipelineLink}`;
+    await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'section', text: { type: 'mrkdwn', text } }] });
+  }
+
   const moodEnhancer = await getMoodEnhancer();
   await sendToSlackWithRetry(webhookUrl, moodEnhancer);
+
+  if (missingFiles.length) {
+    console.error(`\n[ERROR] Notifications sent, but ${missingFiles.join(', ')} could not be read - failing the job to keep this visible`);
+    Deno.exit(1);
+  }
 
   console.log('\n[INFO] All notifications sent successfully');
 };

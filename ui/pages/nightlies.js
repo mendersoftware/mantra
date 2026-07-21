@@ -5,8 +5,9 @@ import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 
 import dayjs from 'dayjs';
 import fs from 'fs/promises';
-import { gql, request } from 'graphql-request';
+import { gql } from 'graphql-request';
 
+import { requestWithRetry } from '../src/graphql';
 import { PipelineCalendar } from '../src/nightlies/CalendarView';
 import { Legend } from '../src/nightlies/Legend';
 import { PipelineListView } from '../src/nightlies/ListView';
@@ -180,15 +181,18 @@ const calculateRetryInfo = jobs => {
   };
 };
 
-const emptyDetails = {
+// keep the pipeline identity around even when we couldn't enrich it, so the repo can still be named and linked
+// downstream - an absent buildStatus would fail the static export, as `undefined` is not serializable
+const emptyDetails = pipeline => ({
   testReportSummary: { total: { failed: 0 } },
   hasRetries: false,
-  retriedJobCount: 0
-};
+  retriedJobCount: 0,
+  buildStatus: { name: pipeline.name, fullPath: pipeline.projectPath, status: '' }
+});
 const getPipelineDetails = async (pipeline, pipelineIid) => {
   let pipelineData;
   try {
-    const data = await request({
+    const data = await requestWithRetry({
       url: gitlabGraphqlUrl,
       document: pipelineEnrichmentQuery,
       variables: {
@@ -200,11 +204,11 @@ const getPipelineDetails = async (pipeline, pipelineIid) => {
     pipelineData = data?.project?.pipeline;
   } catch (error) {
     console.error(`(${pipeline.name}): GraphQL query failed for pipeline ${pipelineIid}:`, error);
-    return emptyDetails;
+    return emptyDetails(pipeline);
   }
   if (!pipelineData) {
     console.warn(`Failed to fetch details for pipeline ${pipelineIid}`);
-    return emptyDetails;
+    return emptyDetails(pipeline);
   }
   const retryInfo = calculateRetryInfo(pipelineData.jobs?.nodes || []);
   const failedJobs = (pipelineData.jobs?.nodes || []).filter(({ status }) => status === 'FAILED');
