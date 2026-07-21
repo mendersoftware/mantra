@@ -263,13 +263,20 @@ const main = async () => {
   const missingFiles = loadedFiles.filter(({ data }) => !data).map(({ filePath }) => filePath);
   const availableFiles = loadedFiles.filter(({ data }) => !!data);
 
+  const today = new Intl.DateTimeFormat('nb-NO', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const header: SlackBlock = { type: 'header', text: { type: 'plain_text', text: `Build Status - ${today}` } };
+  const pipelineUrl = Deno.env.get('CI_PIPELINE_URL');
+  const pipelineLink = pipelineUrl ? ` <${pipelineUrl}|Pipeline>` : '';
+
+  // say so rather than going quiet - a missing report is easily mistaken for everything being fine
   if (!availableFiles.length) {
-    console.error('[ERROR] None of the build status files could be read - skipping the notification entirely');
+    console.error('[ERROR] None of the build status files could be read');
+    const text = `🚨 *No build status to report.* The ui build did not produce ${missingFiles.join(' or ')}, so there is nothing to check against.${pipelineLink}`;
+    await sendToSlackWithRetry(webhookUrl, { blocks: [header, { type: 'section', text: { type: 'mrkdwn', text } }] });
     Deno.exit(1);
   }
 
-  const today = new Intl.DateTimeFormat('nb-NO', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-  await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'header', text: { type: 'plain_text', text: `Build Status - ${today}` } }] });
+  await sendToSlackWithRetry(webhookUrl, { blocks: [header] });
 
   for (const { data } of availableFiles) {
     for (const [index, areaName] of areas.entries()) {
@@ -289,7 +296,7 @@ const main = async () => {
   }
 
   if (missingFiles.length) {
-    const text = `⚠️ No data for ${missingFiles.join(', ')} - the ui build likely failed, so this report is incomplete.`;
+    const text = `⚠️ *This report is incomplete.* No data for ${missingFiles.join(', ')}, the ui build likely failed.${pipelineLink}`;
     await sendToSlackWithRetry(webhookUrl, { blocks: [{ type: 'section', text: { type: 'mrkdwn', text } }] });
   }
 
