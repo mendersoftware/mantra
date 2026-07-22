@@ -25,6 +25,7 @@ const repos = [
   { repo: 'mender-artifact', staging: true, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'mender-binary-delta', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.5.x'] },
   { repo: 'mender-cli', staging: true, isExecutable: true, isProduct: true, area: areas.backend },
+  { repo: 'mender-client-subcomponents', staging: true, isExecutable: false, isProduct: true, area: areas.client, supportedBranches: ['6.0.x']  },
   { repo: 'mender-configure-module', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.1.x'] },
   { repo: 'mender-connect', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['2.3.x'] },
   { repo: 'mender-convert', staging: true, isExecutable: true, isProduct: true, area: areas.client },
