@@ -110,12 +110,12 @@ export const pipelines = [
   {
     name: 'mender-client-subcomponents',
     projectPath: 'Northern.tech/Mender/mender-client-subcomponents',
-    pipelineScheduleId: 2694897306
+    pipelineScheduleId: 4254908
   },
   {
-      name: 'mender-client-subcomponents:6.0.x',
+    name: 'mender-client-subcomponents:6.0.x',
     projectPath: 'Northern.tech/Mender/mender-client-subcomponents',
-    pipelineScheduleId: 2694600497
+    pipelineScheduleId: 4254912
   },
   {
     name: 'mender-server-enterprise',
