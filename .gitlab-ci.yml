@@ -214,7 +214,8 @@ publish:image-multiplatform:ui:
 
 sync:image:ui:
   extends: sync:image
-  dependencies: []
+  dependencies:
+    - publish:image-multiplatform:ui
   needs:
     - job: publish:image-multiplatform:ui
       artifacts: true
