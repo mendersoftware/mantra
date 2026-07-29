@@ -246,7 +246,8 @@ const getNightlies = async (accu, options = {}, pipeline) => {
   const pipelinesFiltered = result.filter(obj => new Date(obj.created_at).setHours(0, 0, 0, 0) >= cutoffDate);
   const pipelines = [...accu, ...pipelinesFiltered];
   console.log(`(${pipeline.name}): gotten ${pipelines.length} pipelines of ${limit} - page: ${page}/${totalPages}`);
-  if (page + 1 <= totalPages && pipelines.length < limit) {
+  const canHaveMore = pipelinesFiltered.length === gitlabPaginationLimit;
+  if (canHaveMore && page + 1 <= totalPages && pipelines.length < limit) {
     return getNightlies(pipelines, { page: Math.min(totalPages, page + 1), limit, cutoffDate, totalPages, url }, pipeline);
   }
   return pipelines.slice(0, limit);
