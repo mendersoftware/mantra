@@ -51,37 +51,39 @@ const gitlabProjectPipelineBaseUrl = 'https://gitlab.com/api/v4/projects/';
 const gitlabGraphqlUrl = 'https://gitlab.com/api/graphql';
 const gitlabPaginationLimit = 100;
 
-// GraphQL query to fetch test report summary and jobs for a single pipeline
-const pipelineEnrichmentQuery = gql`
-  query getPipelineDetails($projectPath: ID!, $iid: ID!) {
+// GraphQL query to fetch test report summary and jobs needed per pipeline
+const pipelineEnrichmentFields = `
+  id
+  status
+  testReportSummary {
+    total {
+      count
+      error
+      failed
+      skipped
+      success
+    }
+  }
+  commit {
+    id
+    author {
+      username
+    }
+  }
+  jobs {
+    nodes {
+      name
+      status
+      retried
+      webPath
+    }
+  }
+`;
+
+const buildPipelineEnrichmentQuery = pipelineIids => gql`
+  query getPipelineDetails($projectPath: ID!) {
     project(fullPath: $projectPath) {
-      pipeline(iid: $iid) {
-        id
-        status
-        testReportSummary {
-          total {
-            count
-            error
-            failed
-            skipped
-            success
-          }
-        }
-        commit {
-          id
-          author {
-            username
-          }
-        }
-        jobs {
-          nodes {
-            name
-            status
-            retried
-            webPath
-          }
-        }
-      }
+      ${pipelineIids.map((iid, index) => `pipeline${index}: pipeline(iid: "${iid}") { ${pipelineEnrichmentFields} }`).join('\n')}
     }
   }
 `;
@@ -195,27 +197,7 @@ const emptyDetails = {
   hasRetries: false,
   retriedJobCount: 0
 };
-const getPipelineDetails = async (pipeline, pipelineIid) => {
-  let pipelineData;
-  try {
-    const data = await request({
-      url: gitlabGraphqlUrl,
-      document: pipelineEnrichmentQuery,
-      variables: {
-        projectPath: pipeline.projectPath,
-        iid: String(pipelineIid)
-      },
-      requestHeaders: gitlabApiRequestHeaders.headers
-    });
-    pipelineData = data?.project?.pipeline;
-  } catch (error) {
-    console.error(`(${pipeline.name}): GraphQL query failed for pipeline ${pipelineIid}:`, error);
-    return emptyDetails;
-  }
-  if (!pipelineData) {
-    console.warn(`Failed to fetch details for pipeline ${pipelineIid}`);
-    return emptyDetails;
-  }
+const toPipelineDetails = (pipeline, pipelineData) => {
   const retryInfo = calculateRetryInfo(pipelineData.jobs?.nodes || []);
   const failedJobs = (pipelineData.jobs?.nodes || []).filter(({ status }) => status === 'FAILED');
   return {
@@ -236,6 +218,30 @@ const getPipelineDetails = async (pipeline, pipelineIid) => {
   };
 };
 
+const getPipelineDetails = async (pipeline, pipelineIids) => {
+  let project;
+  try {
+    const data = await request({
+      url: gitlabGraphqlUrl,
+      document: buildPipelineEnrichmentQuery(pipelineIids),
+      variables: { projectPath: pipeline.projectPath },
+      requestHeaders: gitlabApiRequestHeaders.headers
+    });
+    project = data?.project;
+  } catch (error) {
+    console.error(`(${pipeline.name}): GraphQL query failed for pipelines ${pipelineIids.join(', ')}:`, error);
+    return pipelineIids.map(() => emptyDetails);
+  }
+  return pipelineIids.map((pipelineIid, index) => {
+    const pipelineData = project?.[`pipeline${index}`];
+    if (!pipelineData) {
+      console.warn(`(${pipeline.name}): Failed to fetch details for pipeline ${pipelineIid}`);
+      return emptyDetails;
+    }
+    return toPipelineDetails(pipeline, pipelineData);
+  });
+};
+
 const getNightlies = async (accu, options = {}, pipeline) => {
   if (!process.env.GITLAB_TOKEN) {
     return [];
@@ -246,11 +252,14 @@ const getNightlies = async (accu, options = {}, pipeline) => {
   const pipelinesFiltered = result.filter(obj => new Date(obj.created_at).setHours(0, 0, 0, 0) >= cutoffDate);
   const pipelines = [...accu, ...pipelinesFiltered];
   console.log(`(${pipeline.name}): gotten ${pipelines.length} pipelines of ${limit} - page: ${page}/${totalPages}`);
-  if (page + 1 <= totalPages && pipelines.length < limit) {
+  const canHaveMore = pipelinesFiltered.length === gitlabPaginationLimit;
+  if (canHaveMore && page + 1 <= totalPages && pipelines.length < limit) {
     return getNightlies(pipelines, { page: Math.min(totalPages, page + 1), limit, cutoffDate, totalPages, url }, pipeline);
   }
   return pipelines.slice(0, limit);
 };
+
+const enrichmentBatchSize = 10; // to reduce single calls to the GraphQL api but still stay below the complexity cutoff (seems to hit between 15-20 pipelines)
 
 export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
   cutoffDate.setHours(0, 0, 0, 0);
@@ -263,28 +272,33 @@ export const getLatestNightlies = async (cutoffDate, limit = 1, pipeline) => {
   const pipelines = await getNightlies([], { cutoffDate, limit, page: 1, totalPages: Math.ceil(totalPipelines / gitlabPaginationLimit), url }, pipeline);
 
   // Now get the test report summary of each pipeline and construct the final objects to return
-  return Promise.all(
-    pipelines.map(async obj => {
-      const details = await getPipelineDetails(pipeline, obj.iid);
+  const detailsByPipeline = [];
+  for (let index = 0; index < pipelines.length; index += enrichmentBatchSize) {
+    const batchIds = pipelines.slice(index, index + enrichmentBatchSize).map(({ iid }) => iid);
+    detailsByPipeline.push(...(await getPipelineDetails(pipeline, batchIds)));
+    console.log(`(${pipeline.name}): enriched ${detailsByPipeline.length} pipelines of ${pipelines.length}`);
+  }
 
-      // Shift 12 hours into the future to show schedules from the previous
-      // evening and early morning as the same day. Use a new attribute
-      // shiftedDate to still keep the real startedAt for correctness when
-      // showing the details of each pipeline.
-      const shiftedDate = dayjs(obj.created_at).add(12, 'hours').toISOString();
+  return pipelines.map((obj, index) => {
+    const details = detailsByPipeline[index];
 
-      return {
-        path: obj.web_url.replace(/^https:\/\/gitlab.com/, ''),
-        status: obj.status.toUpperCase(),
-        startedAt: obj.created_at,
-        testReportSummary: details?.testReportSummary,
-        hasRetries: details?.hasRetries,
-        retriedJobCount: details?.retriedJobCount,
-        shiftedDate,
-        buildStatus: details?.buildStatus
-      };
-    })
-  );
+    // Shift 12 hours into the future to show schedules from the previous
+    // evening and early morning as the same day. Use a new attribute
+    // shiftedDate to still keep the real startedAt for correctness when
+    // showing the details of each pipeline.
+    const shiftedDate = dayjs(obj.created_at).add(12, 'hours').toISOString();
+
+    return {
+      path: obj.web_url.replace(/^https:\/\/gitlab.com/, ''),
+      status: obj.status.toUpperCase(),
+      startedAt: obj.created_at,
+      testReportSummary: details?.testReportSummary,
+      hasRetries: details?.hasRetries,
+      retriedJobCount: details?.retriedJobCount,
+      shiftedDate,
+      buildStatus: details?.buildStatus
+    };
+  });
 };
 const limit = 50;
 
@@ -362,7 +376,7 @@ export async function getStaticProps() {
   }
   const flatNightlies = sortByNamesOrder(mergeByDate(nightliesArr));
 
-  const nightliesBuilds = Object.values(flatNightlies[0] || {}).map(({ buildStatus }) => ({
+  const nightliesBuilds = Object.values(flatNightlies[0]).map(({ buildStatus }) => ({
     ...emptyBuildStatusItem,
     repo: buildStatus.name,
     buildStatus
