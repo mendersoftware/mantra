@@ -4,6 +4,7 @@ WORKDIR /work
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . ./
+ARG BUILD_ID
 RUN --mount=type=secret,id=aws_access_key_id \
     --mount=type=secret,id=aws_secret_access_key \
     --mount=type=secret,id=gitlab_token \
