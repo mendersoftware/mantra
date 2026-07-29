@@ -123,6 +123,35 @@ sync:image:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     TARGET_MANIFEST_FILE: kubernetes/mender-qastatus/api-deployment.yaml
+  # mendertesting sync:image script variant to handle digest identical backend images/ nothing new to sync as success
+  script:
+    - if [ -z "$PUBLISH_IMAGE_DIGEST" ]; then
+    -   echo "PUBLISH_IMAGE_DIGEST is empty, refusing to sync $TARGET_MANIFEST_FILE"
+    -   exit 1
+    - fi
+    - echo "Syncing $CI_PROJECT_NAME to $PUBLISH_IMAGE_DIGEST"
+    - cd $(mktemp -d)
+    - git clone --depth 1 -b ${INFRA_BRANCH} ${INFRA_REPOSITORY} .
+    - if [ ! -f "$TARGET_MANIFEST_FILE" ]; then
+    -   echo "Cannot find spec file $TARGET_MANIFEST_FILE for container $CI_PROJECT_NAME"
+    -   exit 1
+    - fi
+    - 'sed -i -E "s#image:\s+[-_./@:a-zA-Z0-9]+#image: $PUBLISH_IMAGE_DIGEST#g" $TARGET_MANIFEST_FILE'
+    - if git diff --quiet; then
+    -   echo "$TARGET_MANIFEST_FILE already references $PUBLISH_IMAGE_DIGEST, nothing to sync"
+    -   exit 0
+    - fi
+    - git commit -asm "[Mender CI/CD] Sync $CI_PROJECT_NAME" -m "Update $CI_PROJECT_NAME with tag $PUBLISH_IMAGE_DIGEST"
+    - git show
+    # Push (5 retries)
+    - for retry in $(seq 5); do
+    -   if git push origin HEAD:${INFRA_BRANCH}; then
+    -     exit 0
+    -   fi
+    -   git fetch origin ${INFRA_BRANCH}
+    -   git rebase origin/${INFRA_BRANCH}
+    - done
+    - exit 1
 
 build:docker-multiplatform:ui:
   extends: build:docker-multiplatform
