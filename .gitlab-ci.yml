@@ -214,11 +214,6 @@ sync:image:ui:
   extends: sync:image
   dependencies:
     - publish:image-multiplatform:ui
-  needs:
-    - job: publish:image-multiplatform:ui
-      artifacts: true
-    - job: publish:image-multiplatform
-      artifacts: false # excluding these explicitly to prevent `PUBLISH_IMAGE_DIGEST` dotenv variable from leaking into the sync & override the ui one
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     TARGET_MANIFEST_FILE: kubernetes/mender-qastatus/ui-deployment.yaml
