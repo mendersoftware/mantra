@@ -168,6 +168,11 @@ export const pipelines = [
     name: 'mender-mcu-integration',
     projectPath: 'Northern.tech/Mender/mender-mcu-integration',
     pipelineScheduleId: 2681340
+  },
+  {
+    name: 'Renovate',
+    projectPath: 'Northern.tech/northerntechhq/renovate-ring',
+    pipelineScheduleId: 4408867
   }
 ];
 
