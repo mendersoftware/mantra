@@ -70,7 +70,9 @@ const repos = [
   { repo: 'progressbar', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'saas-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
   { repo: 'saas', organization: 'MenderSaas', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
-  { repo: 'sre-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas }
+  { repo: 'sre-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
+  { repo: 'mender-container-modules', branches: ['main'], staging: false, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.0.x'] },
+  { repo: 'mender-delta-container-modules', branches: ['main'], staging: false, isExecutable: true, isProduct: true, area: areas.client }
 ];
 
 const mainBranches = ['main', 'master'];
