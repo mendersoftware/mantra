@@ -46,7 +46,7 @@ const repos = [
   { repo: 'mender-gateway', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['2.0.x', '2.1.x'] },
   { repo: 'mender-helm', staging: false, isExecutable: false, isProduct: false, area: areas.saas, supportedBranches: ['5.x'] },
   { repo: 'mender-image-tests', staging: false, isExecutable: false, isProduct: false, area: areas.client },
-  { repo: 'mender-mcu', branches: ['main'], staging: false, isExecutable: true, isProduct: true, area: areas.client },
+  { repo: 'mender-mcu', branches: ['main'], staging: false, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.0.x', '1.1.x'] },
   { repo: 'mender-orchestrator', branches: ['main'], staging: false, isExecutable: true, isProduct: true, area: areas.client },
   {
     repo: 'mender-server-enterprise',
