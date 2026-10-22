@@ -23,7 +23,7 @@ const repos = [
   { repo: 'mender-api-docs', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-api-gateway-docker', staging: false, isExecutable: false, isProduct: false, area: areas.backend },
   { repo: 'mender-artifact', staging: true, isExecutable: true, isProduct: true, area: areas.client },
-  { repo: 'mender-binary-delta', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.5.x'] },
+  { repo: 'mender-binary-delta', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.5.x', '1.6.x'] },
   { repo: 'mender-cli', staging: true, isExecutable: true, isProduct: true, area: areas.backend },
   {
     repo: 'mender-client-subcomponents',
@@ -32,17 +32,17 @@ const repos = [
     isExecutable: false,
     isProduct: true,
     area: areas.client,
-    supportedBranches: ['6.0.x']
+    supportedBranches: ['6.0.x', '6.1.x']
   },
   { repo: 'mender-configure-module', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.1.x'] },
-  { repo: 'mender-connect', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['2.3.x', '3.0.x'] },
+  { repo: 'mender-connect', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['3.0.x', '3.1.x'] },
   { repo: 'mender-convert', staging: true, isExecutable: true, isProduct: true, area: areas.client },
   { repo: 'mender-demo-artifact', staging: false, isExecutable: false, isProduct: false, area: areas.backend },
   { repo: 'mender-dist-packages', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'mender-docs-changelog', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-docs-site', staging: false, isExecutable: false, isProduct: false, area: areas.docs },
   { repo: 'mender-docs', branches: ['master', 'hosted'], staging: false, isExecutable: false, isProduct: false, area: areas.docs },
-  { repo: 'mender-flash', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.0.x', '1.1.x'] },
+  { repo: 'mender-flash', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.1.x'] },
   { repo: 'mender-gateway', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['2.0.x', '2.1.x'] },
   { repo: 'mender-helm', staging: false, isExecutable: false, isProduct: false, area: areas.saas, supportedBranches: ['5.x'] },
   { repo: 'mender-image-tests', staging: false, isExecutable: false, isProduct: false, area: areas.client },
@@ -62,17 +62,17 @@ const repos = [
   { repo: 'mender-snapshot', staging: false, isExecutable: false, isProduct: true, area: areas.client },
   { repo: 'mender-stress-test-client', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'mender-test-containers', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
-  { repo: 'mender', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['5.0.x', '5.1.x'] },
+  { repo: 'mender', staging: true, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['5.1.x', '5.2.x'] },
   { repo: 'mendertesting', staging: false, isExecutable: false, isProduct: false, area: areas.qa },
   { repo: 'meta-mender', staging: true, isExecutable: false, isProduct: true, area: areas.client, supportedBranches: ['scarthgap', 'wrynose'] },
-  { repo: 'monitor-client', staging: false, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.4.x', '1.5.x'] },
+  { repo: 'monitor-client', staging: false, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.5.x'] },
   { repo: 'openssl', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'progressbar', staging: false, isExecutable: false, isProduct: false, area: areas.client },
   { repo: 'saas-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
   { repo: 'saas', organization: 'MenderSaas', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
   { repo: 'sre-tools', staging: false, isExecutable: false, isProduct: false, area: areas.saas },
-  { repo: 'mender-container-modules', branches: ['main'], staging: false, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.0.x'] },
-  { repo: 'mender-delta-container-modules', branches: ['main'], staging: false, isExecutable: true, isProduct: true, area: areas.client }
+  { repo: 'mender-container-modules', branches: ['main'], staging: false, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.0.x', '1.1.x'] },
+  { repo: 'mender-delta-container-modules', branches: ['main'], staging: false, isExecutable: true, isProduct: true, area: areas.client, supportedBranches: ['1.0.x'] }
 ];
 
 const mainBranches = ['main', 'master'];
