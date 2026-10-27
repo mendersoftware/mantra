@@ -73,9 +73,17 @@ publish:image:saas:
   rules:
     - when: never
 
+.skip-scheduled:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+
 test:check-python3-formatting:
   stage: test
   needs: []
+  rules:
+    - !reference [.skip-scheduled, rules]
+    - when: on_success
   image: python:3
   before_script:
     - pip install tox
@@ -86,6 +94,9 @@ test:check-python3-formatting:
 test:backend-unit:
   stage: test
   needs: []
+  rules:
+    - !reference [.skip-scheduled, rules]
+    - when: on_success
   services:
     - name: postgres:18.6-bookworm
       alias: db
@@ -107,22 +118,37 @@ build:docker-multiplatform:
     DOCKER_DIR: backend
     GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/api:${CI_PIPELINE_ID}'
   rules:
+    - !reference [.skip-scheduled, rules]
     - if: $CI_COMMIT_REF_NAME == "master"
     - changes:
         - backend/**/*
   tags:
     - k8s
 
+.publish-rules:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master|staging|production|feature-.+|v?\d+\.\d+\.x)$/'
+
+.sync-rules:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+
 publish:image-multiplatform:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     DOCKER_DIR: backend
     GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/api:${CI_PIPELINE_ID}'
+  rules:
+    - !reference [.skip-scheduled, rules]
+    - !reference [.publish-rules, rules]
 
 sync:image:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-api
     TARGET_MANIFEST_FILE: kubernetes/mender-qastatus/api-deployment.yaml
+  rules:
+    - !reference [.skip-scheduled, rules]
+    - !reference [.sync-rules, rules]
   # mendertesting sync:image script variant to handle digest identical backend images/ nothing new to sync as success
   script:
     - if [ -z "$PUBLISH_IMAGE_DIGEST" ]; then
@@ -238,6 +264,7 @@ publish:image-multiplatform:ui:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     DOCKER_DIR: ui
     GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}/ui:${CI_PIPELINE_ID}'
+  rules: !reference [.publish-rules, rules]
 
 sync:image:ui:
   extends: sync:image
@@ -246,6 +273,7 @@ sync:image:ui:
   variables:
     DOCKER_REPOSITORY: mendersoftware/mantra-ui
     TARGET_MANIFEST_FILE: kubernetes/mender-qastatus/ui-deployment.yaml
+  rules: !reference [.sync-rules, rules]
 
 notify:slack:build-status:
   stage: publish
