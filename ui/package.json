@@ -24,14 +24,14 @@
     "tss-react": "^4.9.21"
   },
   "devDependencies": {
-    "@northern.tech/eslint-config": "0.7.2",
+    "@northern.tech/eslint-config": "0.7.3",
     "@northern.tech/prettier-config": "0.2.1",
-    "@northern.tech/typescript-config": "0.3.2",
+    "@northern.tech/typescript-config": "0.3.3",
     "@types/node": "^26.0.1",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "eslint": "10.13.0",
+    "eslint": "10.14.0",
     "eslint-config-next": "16.4.3",
     "eslint-plugin-prettier": "^5.5.6",
     "prettier": "^3.9.4",
