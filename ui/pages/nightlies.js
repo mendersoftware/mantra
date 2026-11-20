@@ -88,92 +88,50 @@ const buildPipelineEnrichmentQuery = pipelineIids => gql`
   }
 `;
 
-export const pipelines = [
-  {
-    name: 'Integration mender-server:main',
-    projectPath: 'Northern.tech/Mender/integration',
-    pipelineScheduleId: 2676039
-  },
-  {
-    name: 'Integration mender-server:4.0.x',
-    projectPath: 'Northern.tech/Mender/integration',
-    pipelineScheduleId: 2766723
-  },
-  {
-    name: 'Full integration mender-server:4.1.x',
-    projectPath: 'Northern.tech/Mender/integration',
-    pipelineScheduleId: 4188082
-  },
-  {
-    name: 'Mender Client Acceptance Tests',
-    projectPath: 'Northern.tech/Mender/mender-qa',
-    pipelineScheduleId: 30585
-  },
-  {
-    name: 'mender-client-subcomponents',
-    projectPath: 'Northern.tech/Mender/mender-client-subcomponents',
-    pipelineScheduleId: 4254908
-  },
-  {
-    name: 'mender-client-subcomponents:6.0.x',
-    projectPath: 'Northern.tech/Mender/mender-client-subcomponents',
-    pipelineScheduleId: 4254912
-  },
-  {
-    name: 'mender-client-subcomponents:6.1.x',
-    projectPath: 'Northern.tech/Mender/mender-client-subcomponents',
-    pipelineScheduleId: 4492907
-  },
-  {
-    name: 'mender-server-enterprise',
-    projectPath: 'Northern.tech/Mender/mender-server-enterprise',
-    pipelineScheduleId: 2738797
-  },
-  {
-    name: 'mender-server-enterprise:4.1.x',
-    projectPath: 'Northern.tech/Mender/mender-server-enterprise',
-    pipelineScheduleId: 4187887
-  },
-  {
-    name: 'mender-server',
-    projectPath: 'Northern.tech/Mender/mender-server',
-    pipelineScheduleId: 2738796
-  },
-  {
-    name: 'mender-server:4.1.x',
-    projectPath: 'Northern.tech/Mender/mender-server',
-    pipelineScheduleId: 4187881
-  },
-  {
-    name: 'mender-gateway:master (w/ client latest)',
-    projectPath: 'Northern.tech/Mender/mender-gateway',
-    pipelineScheduleId: 2874910
-  },
-  {
-    name: 'mender-gateway:2.0.x (w/ client latest)',
-    projectPath: 'Northern.tech/Mender/mender-gateway',
-    pipelineScheduleId: 2874911
-  },
-  {
-    name: 'mender-gateway:2.1.x (w/ client latest)',
-    projectPath: 'Northern.tech/Mender/mender-gateway',
-    pipelineScheduleId: 4298928
-  },
-  {
-    name: 'mender-gateway:master (w/ client master)',
-    projectPath: 'Northern.tech/Mender/mender-gateway',
-    pipelineScheduleId: 4022183
-  },
-  {
-    name: 'mender-orchestrator',
-    projectPath: 'Northern.tech/Mender/mender-orchestrator',
-    pipelineScheduleId: 4191389
-  },
-  {
-    name: 'mender-mcu-integration',
-    projectPath: 'Northern.tech/Mender/mender-mcu-integration',
-    pipelineScheduleId: 2681340
-  },
+const schedulesQuery = async () => {
+  const query = gql`
+    query getScheduledPipelines {
+      group(fullPath: "Northern.tech/Mender") {
+        projects(first: 500, includeSubgroups: true) {
+          count
+          nodes {
+            name
+            fullPath
+            pipelineSchedules {
+              nodes {
+                id
+                description
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const data = await request({
+    url: gitlabGraphqlUrl,
+    document: query,
+    variables: {},
+    requestHeaders: gitlabApiRequestHeaders.headers
+  });
+
+  const { nodes = [] } = data?.group?.projects ?? {};
+  return nodes.reduce((accu, project) => {
+    if (project.pipelineSchedules.nodes.length) {
+      const { name, fullPath: projectPath } = project;
+      const enhancedNodes = project.pipelineSchedules.nodes.map(({ id, description }) => ({
+        pipelineScheduleId: id.substring(id.lastIndexOf('/') + 1),
+        projectPath,
+        name: `${name} ${description}`
+      }));
+      accu.push(...enhancedNodes);
+    }
+    return accu;
+  }, []);
+};
+
+const nonMenderPipelines = [
   {
     name: 'Renovate',
     projectPath: 'Northern.tech/northerntechhq/renovate-ring',
@@ -350,7 +308,7 @@ const mergeByDate = pipelines => {
   return runsMerged.filter(item => !!item);
 };
 
-const sortByNamesOrder = pipelineRuns => {
+const sortByNamesOrder = (pipelineRuns, pipelines) => {
   const pipelineNamesOrder = pipelines.map(pipeline => pipeline.name);
 
   const sortedRuns = pipelineRuns.map(item => {
@@ -379,12 +337,14 @@ const emptyBuildStatusItem = {
 export async function getStaticProps() {
   const nightlies = {};
   const nightliesArr = [];
+  const scheduledPipelines = await schedulesQuery();
+  const pipelines = [...scheduledPipelines, ...nonMenderPipelines];
   for (const pipeline of pipelines) {
     const [mixed, plain] = await getNightliesByPipeline(pipeline);
     nightlies[pipeline.name] = mixed;
     nightliesArr.push({ data: plain, name: pipeline.name });
   }
-  const flatNightlies = sortByNamesOrder(mergeByDate(nightliesArr));
+  const flatNightlies = sortByNamesOrder(mergeByDate(nightliesArr), pipelines);
 
   const nightliesBuilds = Object.values(flatNightlies[0]).map(({ buildStatus }) => ({
     ...emptyBuildStatusItem,
