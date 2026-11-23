@@ -98,7 +98,7 @@ test:backend-unit:
     - !reference [.skip-scheduled, rules]
     - when: on_success
   services:
-    - name: postgres:18.7-bookworm
+    - name: postgres:19.0-bookworm
       alias: db
   variables:
     POSTGRES_PASSWORD: password
