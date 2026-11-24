@@ -116,19 +116,14 @@ const schedulesQuery = async () => {
     requestHeaders: gitlabApiRequestHeaders.headers
   });
 
-  const { nodes = [] } = data?.group?.projects ?? {};
-  return nodes.reduce((accu, project) => {
-    if (project.pipelineSchedules.nodes.length) {
-      const { name, fullPath: projectPath } = project;
-      const enhancedNodes = project.pipelineSchedules.nodes.map(({ id, description }) => ({
-        pipelineScheduleId: id.substring(id.lastIndexOf('/') + 1),
-        projectPath,
-        name: `${name} ${description}`
-      }));
-      accu.push(...enhancedNodes);
-    }
-    return accu;
-  }, []);
+  const nodes = data?.group?.projects?.nodes ?? [];
+  return nodes.flatMap(({ name, fullPath: projectPath, pipelineSchedules }) =>
+    (pipelineSchedules?.nodes ?? []).map(({ id, description }) => ({
+      pipelineScheduleId: id.split('/').pop(),
+      projectPath,
+      name: `${name} ${description}`
+    }))
+  );
 };
 
 const nonMenderPipelines = [
