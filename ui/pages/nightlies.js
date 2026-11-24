@@ -88,6 +88,15 @@ const buildPipelineEnrichmentQuery = pipelineIids => gql`
   }
 `;
 
+const nonMenderPipelineSchedules = [
+  {
+    name: 'Renovate',
+    projectPath: 'Northern.tech/northerntechhq/renovate-ring',
+    pipelineScheduleId: 4408867
+  }
+];
+const schedulesIgnoreList = ['Northern.tech/Mender/mantra'];
+
 const schedulesQuery = async () => {
   const query = gql`
     query getScheduledPipelines {
@@ -116,28 +125,17 @@ const schedulesQuery = async () => {
     requestHeaders: gitlabApiRequestHeaders.headers
   });
 
-  const { nodes = [] } = data?.group?.projects ?? {};
-  return nodes.reduce((accu, project) => {
-    if (project.pipelineSchedules.nodes.length) {
-      const { name, fullPath: projectPath } = project;
-      const enhancedNodes = project.pipelineSchedules.nodes.map(({ id, description }) => ({
-        pipelineScheduleId: id.substring(id.lastIndexOf('/') + 1),
+  const nodes = data?.group?.projects?.nodes ?? [];
+  return nodes
+    .filter(({ fullPath }) => !schedulesIgnoreList.includes(fullPath))
+    .flatMap(({ name, fullPath: projectPath, pipelineSchedules }) =>
+      (pipelineSchedules?.nodes ?? []).map(({ id, description }) => ({
+        pipelineScheduleId: id.split('/').pop(),
         projectPath,
         name: `${name} ${description}`
-      }));
-      accu.push(...enhancedNodes);
-    }
-    return accu;
-  }, []);
+      }))
+    );
 };
-
-const nonMenderPipelines = [
-  {
-    name: 'Renovate',
-    projectPath: 'Northern.tech/northerntechhq/renovate-ring',
-    pipelineScheduleId: 4408867
-  }
-];
 
 const calculateRetryInfo = jobs => {
   if (!jobs || jobs.length === 0) {
@@ -338,7 +336,7 @@ export async function getStaticProps() {
   const nightlies = {};
   const nightliesArr = [];
   const scheduledPipelines = await schedulesQuery();
-  const pipelines = [...scheduledPipelines, ...nonMenderPipelines];
+  const pipelines = [...scheduledPipelines, ...nonMenderPipelineSchedules];
   for (const pipeline of pipelines) {
     const [mixed, plain] = await getNightliesByPipeline(pipeline);
     nightlies[pipeline.name] = mixed;
