@@ -5,7 +5,7 @@ import { Box, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 
 import dayjs from 'dayjs';
 import fs from 'fs/promises';
-import { gql, request } from 'graphql-request';
+import { gql, request } from '../src/graphql';
 
 import { PipelineCalendar } from '../src/nightlies/CalendarView';
 import { Legend } from '../src/nightlies/Legend';

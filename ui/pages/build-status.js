@@ -3,7 +3,7 @@ import { Accordion, AccordionDetails, AccordionSummary, Stack, Typography } from
 
 import { existsSync } from 'fs';
 import fs from 'fs/promises';
-import { gql, request } from 'graphql-request';
+import { gql, request } from '../src/graphql';
 
 import Link from '../components/link';
 import { buildStatusColor } from '../src/constants';
